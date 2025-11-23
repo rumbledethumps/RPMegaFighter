@@ -37,6 +37,7 @@ target_sources(rpmegafighter PRIVATE
     src/bkgstars.c
     src/pause.c
     src/title_screen.c
+    src/text.c
     src/random.c
 )
 
