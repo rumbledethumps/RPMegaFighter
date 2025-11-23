@@ -38,6 +38,7 @@ target_sources(rpmegafighter PRIVATE
     src/pause.c
     src/title_screen.c
     src/text.c
+    src/input.c
     src/random.c
 )
 

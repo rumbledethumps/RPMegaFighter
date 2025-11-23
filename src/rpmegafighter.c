@@ -26,6 +26,7 @@
 #include "pause.h"
 #include "title_screen.h"
 #include "text.h"
+#include "input.h"
 
 // ============================================================================
 // GAME CONSTANTS
@@ -349,35 +350,8 @@ static void init_game(void)
 
 /**
  * Read keyboard and gamepad input
+ * Note: Moved to input.c
  */
-static void handle_input(void)
-{
-    // Read keyboard state
-    RIA.addr0 = KEYBOARD_INPUT;
-    RIA.step0 = 2;
-    keystates[0] = RIA.rw0;
-    RIA.step0 = 1;
-    keystates[2] = RIA.rw0;
-    
-    // Read gamepad data
-    RIA.addr0 = GAMEPAD_INPUT;
-    RIA.step0 = 1;
-    for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-        gamepad[i].dpad = RIA.rw0;
-        gamepad[i].sticks = RIA.rw0;
-        gamepad[i].btn0 = RIA.rw0;
-        gamepad[i].btn1 = RIA.rw0;
-        gamepad[i].lx = RIA.rw0;
-        gamepad[i].ly = RIA.rw0;
-        gamepad[i].rx = RIA.rw0;
-        gamepad[i].ry = RIA.rw0;
-        gamepad[i].l2 = RIA.rw0;
-        gamepad[i].r2 = RIA.rw0;
-    }
-    
-    // Handle pause button (moved to pause.c)
-    handle_pause_input();
-}
 
 // ============================================================================
 // GAME LOGIC UPDATES
