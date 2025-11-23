@@ -35,6 +35,7 @@ target_sources(rpmegafighter PRIVATE
     src/bullets.c
     src/sound.c
     src/bkgstars.c
+    src/pause.c
     src/random.c
 )
 

@@ -174,10 +174,6 @@ static char score_value[6] = "00000";
 static char message[MESSAGE_LENGTH];
 static uint16_t score = 0;
 
-// Game pause state
-static bool game_paused = false;
-static bool start_button_pressed = false;  // For edge detection
-
 static const uint16_t vlen = 57600; // Extended Memory space for bitmap graphics (320x180 @ 8-bits)
 
 // Pre-calulated Angles: 255*sin(theta)

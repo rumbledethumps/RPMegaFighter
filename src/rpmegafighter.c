@@ -23,6 +23,7 @@
 #include "bullets.h"
 #include "sound.h"
 #include "bkgstars.h"
+#include "pause.h"
 
 // ============================================================================
 // GAME CONSTANTS
@@ -321,9 +322,8 @@ static void init_game(void)
     game_score = 0;
     game_level = 1;
     game_frame = 0;
-    game_paused = false;
+    reset_pause_state();  // Reset pause state
     game_over = false;
-    start_button_pressed = false;  // Reset to prevent immediate pause after title screen
     
     // Reset player position and state
     init_player();
@@ -342,98 +342,8 @@ static void init_game(void)
 
 /**
  * Display or clear the pause message on screen
- * @param show_paused If true, draws "PAUSED", if false clears it
+ * Note: Moved to pause.c
  */
-static void display_pause_message(bool show_paused)
-{
-    const uint8_t pause_color = 0xFF;
-    const uint16_t center_x = 120;
-    const uint16_t center_y = 85;
-    
-    if (show_paused) {
-        // Draw "PAUSED" using simple block letters
-        // P
-        for (uint16_t x = center_x; x < center_x + 3; x++) {
-            for (uint16_t y = center_y; y < center_y + 12; y++) {
-                set(x, y, pause_color);
-            }
-        }
-        for (uint16_t x = center_x; x < center_x + 8; x++) {
-            set(x, center_y, pause_color);
-            set(x, center_y + 6, pause_color);
-        }
-        for (uint16_t y = center_y; y < center_y + 7; y++) {
-            set(center_x + 8, y, pause_color);
-        }
-        
-        // A
-        for (uint16_t y = center_y + 3; y < center_y + 12; y++) {
-            set(center_x + 12, y, pause_color);
-            set(center_x + 20, y, pause_color);
-        }
-        for (uint16_t x = center_x + 12; x < center_x + 21; x++) {
-            set(x, center_y + 3, pause_color);
-            set(x, center_y + 7, pause_color);
-        }
-        
-        // U
-        for (uint16_t y = center_y; y < center_y + 12; y++) {
-            set(center_x + 24, y, pause_color);
-            set(center_x + 32, y, pause_color);
-        }
-        for (uint16_t x = center_x + 24; x < center_x + 33; x++) {
-            set(x, center_y + 11, pause_color);
-        }
-        
-        // S
-        for (uint16_t x = center_x + 36; x < center_x + 44; x++) {
-            set(x, center_y, pause_color);
-            set(x, center_y + 6, pause_color);
-            set(x, center_y + 11, pause_color);
-        }
-        for (uint16_t y = center_y; y < center_y + 7; y++) {
-            set(center_x + 36, y, pause_color);
-        }
-        for (uint16_t y = center_y + 6; y < center_y + 12; y++) {
-            set(center_x + 44, y, pause_color);
-        }
-        
-        // E
-        for (uint16_t y = center_y; y < center_y + 12; y++) {
-            set(center_x + 48, y, pause_color);
-        }
-        for (uint16_t x = center_x + 48; x < center_x + 56; x++) {
-            set(x, center_y, pause_color);
-            set(x, center_y + 6, pause_color);
-            set(x, center_y + 11, pause_color);
-        }
-        
-        // D
-        for (uint16_t y = center_y; y < center_y + 12; y++) {
-            set(center_x + 60, y, pause_color);
-        }
-        for (uint16_t x = center_x + 60; x < center_x + 67; x++) {
-            set(x, center_y, pause_color);
-            set(x, center_y + 11, pause_color);
-        }
-        for (uint16_t y = center_y + 1; y < center_y + 11; y++) {
-            set(center_x + 67, y, pause_color);
-        }
-        
-        // Draw "PUSH A+C TO EXIT" below PAUSED
-        draw_text(center_x - 10, center_y + 20, "PUSH A+C TO EXIT", pause_color);
-    } else {
-        // Clear PAUSED text by drawing black
-        for (uint16_t x = center_x; x < center_x + 68; x++) {
-            for (uint16_t y = center_y; y < center_y + 12; y++) {
-                set(x, y, 0x00);
-            }
-        }
-        
-        // Clear "PUSH A+C TO EXIT" text
-        clear_rect(center_x - 10, center_y + 20, 90, 5);
-    }
-}
 
 // ============================================================================
 // INPUT HANDLING
@@ -467,19 +377,8 @@ static void handle_input(void)
         gamepad[i].r2 = RIA.rw0;
     }
     
-    // Handle pause button (Start) - BTN1 bit 0x02
-    if (gamepad[0].dpad & GP_CONNECTED) {
-        if (gamepad[0].btn1 & 0x02) {  // START button = 0x02 in BTN1
-            if (!start_button_pressed) {
-                game_paused = !game_paused;
-                display_pause_message(game_paused);
-                start_button_pressed = true;
-                printf("\nGame %s\n", game_paused ? "PAUSED" : "RESUMED");
-            }
-        } else {
-            start_button_pressed = false;
-        }
-    }
+    // Handle pause button (moved to pause.c)
+    handle_pause_input();
 }
 
 // ============================================================================
@@ -986,9 +885,9 @@ int main(void)
         }
         
         // Skip updates if paused
-        if (game_paused) {
-            // Check for A+C buttons pressed together to exit (0x04 + 0x20 = 0x24)
-            if ((gamepad[0].btn0 & 0x04) && (gamepad[0].btn0 & 0x20)) {
+        if (is_game_paused()) {
+            // Check for A+C buttons pressed together to exit
+            if (check_pause_exit()) {
                 printf("\nA+C pressed - Exiting game...\n");
                 break;
             }
