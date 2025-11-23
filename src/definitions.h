@@ -275,8 +275,8 @@ static uint8_t bullet_c = 0;                 //Counter for bullets
 static uint16_t bullet_timer = 0;            //delay timer for new bullets
 
 // Properties for enemy bullets
-#define NEBULLET 4 // Maximum bad-guy bullets
-#define NEBULLET_TIMER_MAX 33 // Sets interval for often the bad guys fire
+#define NEBULLET 8 // Maximum bad-guy bullets
+#define NEBULLET_TIMER_MAX 5 // Sets interval for often the bad guys fire
 static uint16_t ebullet_x[NEBULLET] = {0};     //X-position
 static uint16_t ebullet_y[NEBULLET] = {0};     //Y-position
 static int16_t ebvxrem[NEBULLET] = {0};        //Track remaider for smooth motion
