@@ -174,7 +174,7 @@ static char score_value[6] = "00000";
 static char message[MESSAGE_LENGTH];
 static uint16_t score = 0;
 
-static const uint16_t vlen = 57600; // Extended Memory space for bitmap graphics (320x180 @ 8-bits)
+const uint16_t vlen = 57600; // Extended Memory space for bitmap graphics (320x180 @ 8-bits)
 
 // Pre-calulated Angles: 255*sin(theta)
 const int16_t sin_fix[] = {

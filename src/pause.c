@@ -17,10 +17,10 @@ typedef struct {
     uint8_t sticks;
     uint8_t btn0;
     uint8_t btn1;
-    uint8_t lx;
-    uint8_t ly;
-    uint8_t rx;
-    uint8_t ry;
+    int8_t lx;         // Signed for analog sticks
+    int8_t ly;
+    int8_t rx;
+    int8_t ry;
     uint8_t l2;
     uint8_t r2;
 } gamepad_t;
