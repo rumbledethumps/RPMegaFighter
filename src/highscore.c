@@ -3,37 +3,11 @@
  */
 
 #include "highscore.h"
+#include "input.h"
 #include "usb_hid_keys.h"
 #include <stdio.h>
 #include <string.h>
 #include <rp6502.h>
-
-// Keyboard state from main game
-extern uint8_t keystates[32];
-#define key(code) (keystates[code >> 3] & (1 << (code & 7)))
-
-// Gamepad structure and constants
-#define KEYBOARD_INPUT  0xEC20
-#define GAMEPAD_INPUT 0xEC50
-#define GAMEPAD_COUNT 4
-
-typedef struct {
-    uint8_t dpad;
-    uint8_t sticks;
-    uint8_t btn0;
-    uint8_t btn1;
-    int8_t lx;
-    int8_t ly;
-    int8_t rx;
-    int8_t ry;
-    uint8_t l2;
-    uint8_t r2;
-} gamepad_t;
-
-#define GP_DPAD_UP        0x01
-#define GP_DPAD_DOWN      0x02
-#define GP_LSTICK_UP      0x01
-#define GP_LSTICK_DOWN    0x02
 
 // Forward declarations for graphics functions
 extern void draw_text(int16_t x, int16_t y, const char* text, uint8_t color);

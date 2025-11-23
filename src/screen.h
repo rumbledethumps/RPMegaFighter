@@ -10,4 +10,11 @@
 #define SCREEN_WIDTH_D2     160
 #define SCREEN_HEIGHT_D2    90
 
+/**
+ * Ship rotation constants
+ */
+
+#define SHIP_ROTATION_STEPS 24
+#define SHIP_ROT_SPEED      3
+
 #endif // SCREEN_H

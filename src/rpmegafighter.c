@@ -45,10 +45,6 @@
 #define BOUNDARY_X          100
 #define BOUNDARY_Y          80
 
-// Player/Ship properties
-#define SHIP_ROTATION_STEPS 24    // Number of rotation angles (matches sin/cos table)
-#define SHIP_ROT_SPEED      3     // Frames between rotation updates
-
 // Bullet properties
 #define MAX_BULLETS         8
 #define BULLET_COOLDOWN     8

@@ -2,6 +2,8 @@
 #include "screen.h"
 #include "bullets.h"
 #include "sound.h"
+#include "input.h"
+#include "usb_hid_keys.h"
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -9,9 +11,6 @@
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-#define SHIP_ROTATION_STEPS 24
-#define SHIP_ROT_SPEED      3
 
 #define BOUNDARY_X          60
 #define BOUNDARY_Y          40
@@ -29,39 +28,7 @@
 // EXTERNAL DEPENDENCIES
 // ============================================================================
 
-// Keyboard and gamepad input
-#define KEYBOARD_BYTES 32
-extern uint8_t keystates[KEYBOARD_BYTES];
-#define key(code) (keystates[code >> 3] & (1 << (code & 7)))
-
-// USB HID key codes we use
-#define KEY_SPACE   0x2C  // Spacebar
-#define KEY_UP      0x52  // Up arrow
-#define KEY_DOWN    0x51  // Down arrow
-#define KEY_LEFT    0x50  // Left arrow
-#define KEY_RIGHT   0x4F  // Right arrow
-
-// Gamepad bits
-#define GP_LSTICK_UP    0x01
-#define GP_LSTICK_DOWN  0x02
-#define GP_LSTICK_LEFT  0x04
-#define GP_LSTICK_RIGHT 0x08
-
-// Gamepad structure - must match definitions.h
-typedef struct {
-    uint8_t dpad;
-    uint8_t sticks;
-    uint8_t btn0;
-    uint8_t btn1;
-    int8_t lx;
-    int8_t ly;
-    int8_t rx;
-    int8_t ry;
-    uint8_t l2;
-    uint8_t r2;
-} gamepad_t;
-
-extern gamepad_t gamepad[4];
+extern gamepad_t gamepad[GAMEPAD_COUNT];
 
 // Lookup tables from definitions.h
 extern const int16_t sin_fix[25];

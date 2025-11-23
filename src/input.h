@@ -1,7 +1,128 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+#include <stdint.h>
+#include <stdbool.h>
+
+// ============================================================================
+// KEYBOARD SUPPORT
+// ============================================================================
+
+#define KEYBOARD_INPUT  0xEC20  // XRAM address for keyboard data
+#define KEYBOARD_BYTES  32      // 32 bytes for 256 key states
+
+// Keyboard state array and macro
+extern uint8_t keystates[KEYBOARD_BYTES];
+extern bool handled_key;
+
+// Macro to check if a key is pressed
+#define key(code) (keystates[code >> 3] & (1 << (code & 7)))
+
+// ============================================================================
+// GAMEPAD SUPPORT
+// ============================================================================
+
+#define GAMEPAD_INPUT     0xEC50  // XRAM address for gamepad data
+#define GAMEPAD_COUNT     4       // Support up to 4 gamepads
+#define GAMEPAD_DATA_SIZE 10      // 10 bytes per gamepad
+
+// Gamepad structure (10 bytes per gamepad)
+typedef struct {
+    uint8_t dpad;      // Direction pad + status bits
+    uint8_t sticks;    // Left and right stick digital directions
+    uint8_t btn0;      // Face buttons and shoulders
+    uint8_t btn1;      // L2/R2/Select/Start/Home/L3/R3
+    int8_t lx;         // Left stick X analog (-128 to 127)
+    int8_t ly;         // Left stick Y analog (-128 to 127)
+    int8_t rx;         // Right stick X analog (-128 to 127)
+    int8_t ry;         // Right stick Y analog (-128 to 127)
+    uint8_t l2;        // Left trigger analog (0-255)
+    uint8_t r2;        // Right trigger analog (0-255)
+} gamepad_t;
+
+// Hardware button bit masks - DPAD
+#define GP_DPAD_UP        0x01
+#define GP_DPAD_DOWN      0x02
+#define GP_DPAD_LEFT      0x04
+#define GP_DPAD_RIGHT     0x08
+#define GP_SONY           0x40  // Sony button faces (Circle/Cross/Square/Triangle)
+#define GP_CONNECTED      0x80  // Gamepad is connected
+
+// Hardware button bit masks - ANALOG STICKS
+#define GP_LSTICK_UP      0x01
+#define GP_LSTICK_DOWN    0x02
+#define GP_LSTICK_LEFT    0x04
+#define GP_LSTICK_RIGHT   0x08
+#define GP_RSTICK_UP      0x10
+#define GP_RSTICK_DOWN    0x20
+#define GP_RSTICK_LEFT    0x40
+#define GP_RSTICK_RIGHT   0x80
+
+// Hardware button bit masks - BTN0 (Face buttons and shoulders)
+#define GP_BTN_A          0x04  // A button on controller
+#define GP_BTN_B          0x02  // B button on controller  
+#define GP_BTN_C          0x20  // C button on controller
+#define GP_BTN_X          0x08  // X or Square
+#define GP_BTN_Y          0x10  // Y or Triangle
+#define GP_BTN_Z          0x01  // Z
+#define GP_BTN_L1         0x40  // Left shoulder
+#define GP_BTN_R1         0x80  // Right shoulder
+
+// Hardware button bit masks - BTN1 (Triggers and special buttons)
+#define GP_BTN_L2         0x01  // Left trigger
+#define GP_BTN_R2         0x02  // Right trigger / START button (actual mapping)
+#define GP_BTN_SELECT     0x04  // Select
+#define GP_BTN_START      0x02  // START button on controller
+#define GP_BTN_HOME       0x10  // Home button
+#define GP_BTN_L3         0x20  // Left stick press
+#define GP_BTN_R3         0x40  // Right stick press
+
+// ============================================================================
+// BUTTON MAPPING SYSTEM
+// ============================================================================
+
+// Game actions that can be mapped
+typedef enum {
+    ACTION_THRUST,
+    ACTION_REVERSE_THRUST,
+    ACTION_ROTATE_LEFT,
+    ACTION_ROTATE_RIGHT,
+    ACTION_FIRE,
+    ACTION_PAUSE,
+    ACTION_COUNT  // Total number of actions
+} GameAction;
+
+// Button mapping structure
+typedef struct {
+    uint8_t keyboard_key;     // USB HID keycode
+    uint8_t gamepad_button;   // Which gamepad field (0=dpad, 1=sticks, 2=btn0, 3=btn1)
+    uint8_t gamepad_mask;     // Bit mask for the button
+} ButtonMapping;
+
+// Button mapping arrays (one set per player/gamepad)
+extern ButtonMapping button_mappings[GAMEPAD_COUNT][ACTION_COUNT];
+
+// ============================================================================
+// FUNCTION DECLARATIONS
+// ============================================================================
+
+// Initialize input system with default button mappings
+void init_input_system(void);
+
 // Read keyboard and gamepad input
 void handle_input(void);
+
+// Check if a game action is active for a specific player
+bool is_action_pressed(uint8_t player_id, GameAction action);
+
+// Set button mapping for a specific action
+void set_button_mapping(uint8_t player_id, GameAction action, 
+                       uint8_t keyboard_key, uint8_t gamepad_button, uint8_t gamepad_mask);
+
+// Get current button mapping for an action
+ButtonMapping get_button_mapping(uint8_t player_id, GameAction action);
+
+// Reset to default button mappings
+void reset_button_mappings(uint8_t player_id);
 
 #endif // INPUT_H
