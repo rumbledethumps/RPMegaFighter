@@ -19,6 +19,7 @@
 #include "highscore.h"
 #include "hud.h"
 #include "fighters.h"
+#include "player.h"
 
 // ============================================================================
 // GAME CONSTANTS
@@ -134,20 +135,9 @@ static uint8_t next_channel[SFX_TYPE_COUNT] = {0, 2};
 // GLOBAL GAME STATE
 // ============================================================================
 
-// Player state
-int16_t player_x = SCREEN_WIDTH_D2;
-int16_t player_y = SCREEN_HEIGHT_D2;
-static int16_t player_vx = 0, player_vy = 0;
-int16_t player_vx_applied = 0, player_vy_applied = 0;
-static int16_t player_x_rem = 0, player_y_rem = 0;
-static int16_t player_rotation = 0;         // 0 to SHIP_ROTATION_STEPS-1
-static int16_t player_rotation_frame = 0;   // Frame counter for rotation speed
-static int16_t player_thrust_x = 0;         // Momentum
-static int16_t player_thrust_y = 0;
-static int16_t player_thrust_delay = 0;
-static int16_t player_thrust_count = 0;
-static bool player_shield_active = false;
-static bool player_boost_active = false;
+// Player state - now in player.c module
+extern int16_t player_x, player_y;
+extern int16_t player_vx_applied, player_vy_applied;
 
 // Scrolling
 int16_t scroll_dx = 0;
@@ -167,11 +157,10 @@ static bool game_over = false;
 static uint8_t control_mode = 0;   // 0 = rotational, 1 = directional
 
 // Bullet pools
-static Bullet bullets[MAX_BULLETS];
+Bullet bullets[MAX_BULLETS];
 static Bullet sbullets[MAX_SBULLETS];
-static uint16_t bullet_cooldown = 0;
 static uint16_t sbullet_cooldown = 0;
-static uint8_t current_bullet_index = 0;
+uint8_t current_bullet_index = 0;
 static uint8_t current_sbullet_index = 0;
 
 // Note: ebullets, fighters, and related state moved to fighters.c
@@ -423,12 +412,13 @@ static void init_graphics(void)
     SPACECRAFT_CONFIG = BITMAP_CONFIG + sizeof(vga_mode3_config_t);
     
     // Initialize rotation transform matrix (identity at rotation 0)
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[0],  cos_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[1], -sin_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[2],  t2_fix4[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[3],  sin_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[4],  cos_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[5],  t2_fix4[ri_max - player_rotation + 1]);
+    int16_t initial_rotation = get_player_rotation();
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[0],  cos_fix[initial_rotation]);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[1], -sin_fix[initial_rotation]);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[2],  t2_fix4[initial_rotation]);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[3],  sin_fix[initial_rotation]);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[4],  cos_fix[initial_rotation]);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[5],  t2_fix4[ri_max - initial_rotation + 1]);
     
     // Set sprite position and properties
     xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, x_pos_px, player_x);
@@ -511,14 +501,7 @@ static void init_game(void)
     start_button_pressed = false;  // Reset to prevent immediate pause after title screen
     
     // Reset player position and state
-    player_x = SCREEN_WIDTH_D2;
-    player_y = SCREEN_HEIGHT_D2;
-    player_vx = 0;
-    player_vy = 0;
-    player_rotation = 0;
-    player_thrust_x = 0;
-    player_thrust_y = 0;
-    player_shield_active = false;
+    init_player();
     
     // Initialize entity pools
     init_bullets();
@@ -681,118 +664,7 @@ static void handle_input(void)
 /**
  * Update player ship position, rotation, and physics
  */
-static void update_player(void)
-{
-    // Handle player rotation (only update every SHIP_ROT_SPEED frames for smoother control)
-    player_rotation_frame++;
-    if (player_rotation_frame >= SHIP_ROT_SPEED) {
-        player_rotation_frame = 0;
-        
-        // Check for rotation input (keyboard or gamepad)
-        bool rotate_left = key(KEY_LEFT) || (gamepad[0].sticks & GP_LSTICK_LEFT);
-        bool rotate_right = key(KEY_RIGHT) || (gamepad[0].sticks & GP_LSTICK_RIGHT);
-        
-        if (rotate_left) {
-            player_rotation++;
-            if (player_rotation >= SHIP_ROTATION_STEPS) {
-                player_rotation = 0;
-            }
-        }
-        if (rotate_right) {
-            player_rotation--;
-            if (player_rotation < 0) {
-                player_rotation = SHIP_ROTATION_STEPS - 1;
-            }
-        }
-    }
-    
-    // Handle thrust/acceleration
-    bool thrust = key(KEY_UP) || (gamepad[0].sticks & GP_LSTICK_UP);
-    
-    if (thrust) {
-        // Get velocity components based on current rotation
-        int16_t thrust_vx, thrust_vy;
-        get_velocity_from_rotation(player_rotation, &thrust_vx, &thrust_vy);
-        
-        // Apply thrust (scaled for game balance)
-        player_vx = thrust_vx;
-        player_vy = thrust_vy;
-        
-        // Reset momentum delay when actively thrusting
-        player_thrust_delay = 0;
-        
-        // Accumulate momentum (scaled down to prevent too much speed)
-        int16_t new_thrust_x = player_thrust_x + (thrust_vx >> 4);
-        int16_t new_thrust_y = player_thrust_y + (thrust_vy >> 4);
-        
-        // Clamp momentum to prevent infinite acceleration
-        if (new_thrust_x > -1024 && new_thrust_x < 1024) {
-            player_thrust_x = new_thrust_x;
-        }
-        if (new_thrust_y > -1024 && new_thrust_y < 1024) {
-            player_thrust_y = new_thrust_y;
-        }
-    } else {
-        player_vx = 0;
-        player_vy = 0;
-    }
-    
-    // Apply momentum and friction
-    int16_t total_vx = player_vx + player_thrust_x;
-    int16_t total_vy = player_vy + player_thrust_y;
-    
-    // Calculate applied velocity with sub-pixel precision (divide by 512 for fixed-point)
-    player_vx_applied = (total_vx + player_x_rem) >> 9;
-    player_vy_applied = (total_vy + player_y_rem) >> 9;
-    
-    // Store remainder for next frame
-    player_x_rem = total_vx + player_x_rem - (player_vx_applied << 9);
-    player_y_rem = total_vy + player_y_rem - (player_vy_applied << 9);
-    
-    // Apply friction when not thrusting
-    if (!thrust) {
-        player_thrust_count++;
-        if (player_thrust_count > 50 && player_thrust_delay < 8) {
-            player_thrust_delay++;
-            player_thrust_count = 0;
-            
-            // Apply friction by halving momentum
-            if (player_vx == 0) {
-                player_thrust_x >>= 1;
-            }
-            if (player_vy == 0) {
-                player_thrust_y >>= 1;
-            }
-        }
-        
-        // Stop momentum after enough friction
-        if (player_thrust_delay >= 8) {
-            player_thrust_x = 0;
-            player_thrust_y = 0;
-        }
-    }
-    
-    // Update player position
-    int16_t new_x = player_x + player_vx_applied;
-    int16_t new_y = player_y + player_vy_applied;
-    
-    // Handle screen boundaries (scrolling behavior)
-    if (new_x > BOUNDARY_X && new_x < (SCREEN_WIDTH - BOUNDARY_X)) {
-        player_x = new_x;
-        scroll_dx = 0;
-    } else {
-        scroll_dx = new_x - player_x;
-        world_offset_x += scroll_dx;
-    }
-    
-    if (new_y > BOUNDARY_Y && new_y < (SCREEN_HEIGHT - BOUNDARY_Y)) {
-        player_y = new_y;
-        scroll_dy = 0;
-    } else {
-        scroll_dy = new_y - player_y;
-        world_offset_y += scroll_dy;
-    }
-}
+
 
 /**
  * Update all active bullets and check collisions
@@ -864,38 +736,7 @@ static void update_bullets(void)
  */
 
 
-/**
- * Fire a bullet from the player ship
- */
-static void fire_bullet(void)
-{
-    if (bullet_cooldown > 0) {
-        return;
-    }
-    
-    if (bullets[current_bullet_index].status < 0) {
-        bullets[current_bullet_index].status = player_rotation;
-        bullets[current_bullet_index].x = player_x + 4;
-        bullets[current_bullet_index].y = player_y + 4;
-        bullets[current_bullet_index].vx_rem = 0;
-        bullets[current_bullet_index].vy_rem = 0;
-        
-        // Set sprite hardware position immediately
-        unsigned ptr = BULLET_CONFIG + current_bullet_index * sizeof(vga_mode4_sprite_t);
-        xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, bullets[current_bullet_index].x);
-        xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, bullets[current_bullet_index].y);
-        
-        // Play deep tone sound effect
-        play_sound(SFX_TYPE_PLAYER_FIRE, 110, PSG_WAVE_SQUARE, 0, 3, 4, 0);
-        
-        current_bullet_index++;
-        if (current_bullet_index >= MAX_BULLETS) {
-            current_bullet_index = 0;
-        }
-        
-        bullet_cooldown = BULLET_COOLDOWN;
-    }
-}
+
 
 
 
@@ -1006,32 +847,7 @@ void clear_rect(int16_t x, int16_t y, int16_t width, int16_t height)
 /**
  * Update player sprite position and rotation
  */
-static void update_player_sprite(void)
-{
-    // Update sprite position (offset 12-15 in config structure)
-    RIA.step0 = sizeof(vga_mode4_asprite_t);
-    RIA.step1 = sizeof(vga_mode4_asprite_t);
-    RIA.addr0 = SPACECRAFT_CONFIG + 12;
-    RIA.addr1 = SPACECRAFT_CONFIG + 13;
-    
-    // Write X position (16-bit)
-    RIA.rw0 = player_x & 0xFF;
-    RIA.rw1 = (player_x >> 8) & 0xFF;
-    
-    // Write Y position (16-bit)
-    RIA.addr0 = SPACECRAFT_CONFIG + 14;
-    RIA.addr1 = SPACECRAFT_CONFIG + 15;
-    RIA.rw0 = player_y & 0xFF;
-    RIA.rw1 = (player_y >> 8) & 0xFF;
-    
-    // Update rotation transform matrix
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[0],  cos_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[1], -sin_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[2],  t2_fix4[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[3],  sin_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[4],  cos_fix[player_rotation]);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[5],  t2_fix4[ri_max - player_rotation + 1]);
-}
+
 
 /**
  * Render all game entities
@@ -1107,16 +923,7 @@ static void show_game_over(void)
     move_ebullets_offscreen();
     
     // Reset player position to center
-    player_x = SCREEN_WIDTH_D2;
-    player_y = SCREEN_HEIGHT_D2;
-    player_vx = 0;
-    player_vy = 0;
-    player_thrust_x = 0;
-    player_thrust_y = 0;
-    
-    // Update player sprite position
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, x_pos_px, player_x);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, y_pos_px, player_y);
+    reset_player_position();
     
     // Check if player got a high score
     int8_t high_score_pos = check_high_score(game_score);
@@ -1422,7 +1229,7 @@ int main(void)
         }
         
         // Update cooldown timers
-        if (bullet_cooldown > 0) bullet_cooldown--;
+        decrement_bullet_cooldown();
         decrement_ebullet_cooldown();
         if (sbullet_cooldown > 0) sbullet_cooldown--;
         
