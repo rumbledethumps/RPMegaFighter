@@ -1,5 +1,6 @@
 #include "fighters.h"
 #include "random.h"
+#include "sound.h"
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -69,21 +70,8 @@ extern const int16_t sin_fix[25];
 extern const int16_t cos_fix[25];
 extern const uint8_t ri_max;
 
-// Sound system
-typedef enum {
-    SFX_TYPE_PLAYER_FIRE,
-    SFX_TYPE_ENEMY_FIRE,
-    SFX_TYPE_HIT
-} SFXType;
-
-typedef enum {
-    PSG_WAVE_SQUARE = 0,
-    PSG_WAVE_TRIANGLE = 1,
-    PSG_WAVE_SAWTOOTH = 2,
-    PSG_WAVE_NOISE = 3
-} PSGWaveform;
-
-extern void play_sound(SFXType type, uint16_t frequency, PSGWaveform waveform, 
+// Sound system (types defined in sound.h)
+extern void play_sound(uint8_t type, uint16_t frequency, uint8_t waveform, 
                        uint8_t attack, uint8_t decay, uint8_t sustain, uint8_t release);
 
 // ============================================================================
