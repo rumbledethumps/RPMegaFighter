@@ -90,6 +90,41 @@ typedef struct {
 } Fighter;
 
 // ============================================================================
+// SOUND SYSTEM - PSG
+// ============================================================================
+
+// PSG channel structure (8 bytes per channel)
+typedef struct {
+    uint16_t freq;          // Frequency (Hz * 3)
+    uint8_t duty;           // Duty cycle 0-255
+    uint8_t vol_attack;     // bits 7-4: volume, bits 3-0: attack rate
+    uint8_t vol_decay;      // bits 7-4: volume, bits 3-0: decay rate  
+    uint8_t wave_release;   // bits 7-4: waveform, bits 3-0: release rate
+    uint8_t pan_gate;       // bits 7-1: pan, bit 0: gate
+    uint8_t unused;         // Padding
+} ria_psg_t;
+
+// Waveforms
+#define PSG_WAVE_SINE     0
+#define PSG_WAVE_SQUARE   1
+#define PSG_WAVE_SAWTOOTH 2
+#define PSG_WAVE_TRIANGLE 3
+#define PSG_WAVE_NOISE    4
+
+// PSG memory location in XRAM
+#define PSG_XRAM_ADDR 0x0100
+
+// Sound effect types (for round-robin allocation)
+#define SFX_TYPE_PLAYER_FIRE   0
+#define SFX_TYPE_ENEMY_FIRE    1
+#define SFX_TYPE_ENEMY_HIT     2
+#define SFX_TYPE_PLAYER_HIT    3
+#define SFX_TYPE_COUNT         4
+
+// Channel allocation (2 channels per effect type for round-robin)
+static uint8_t next_channel[SFX_TYPE_COUNT] = {0, 2, 4, 6};
+
+// ============================================================================
 // GLOBAL GAME STATE
 // ============================================================================
 
@@ -313,6 +348,84 @@ static void draw_stars(int16_t dx, int16_t dy)
             set(star_x[i], star_y[i], star_colour[i]);
         }
     }
+}
+
+/**
+ * Initialize PSG (Programmable Sound Generator)
+ */
+static void init_psg(void)
+{
+    // Enable PSG at XRAM address PSG_XRAM_ADDR
+    xregn(0, 1, 0x00, 1, PSG_XRAM_ADDR);
+    
+    // Clear all 8 channels (64 bytes total)
+    RIA.addr0 = PSG_XRAM_ADDR;
+    RIA.step0 = 1;
+    for (uint8_t i = 0; i < 64; i++) {
+        RIA.rw0 = 0;
+    }
+}
+
+/**
+ * Stop sound on a channel
+ */
+static void stop_sound(uint8_t channel)
+{
+    if (channel > 7) return;
+    
+    uint16_t psg_addr = PSG_XRAM_ADDR + (channel * 8) + 6;  // pan_gate offset
+    RIA.addr0 = psg_addr;
+    RIA.rw0 = 0x00;  // Gate off (release)
+}
+
+/**
+ * Play sound effect with round-robin channel allocation
+ * @param sfx_type Sound effect type (0-3)
+ * @param freq Frequency in Hz
+ * @param wave Waveform (0=sine, 1=square, 2=saw, 3=tri, 4=noise)
+ * @param attack Attack rate (0-15)
+ * @param decay Decay rate (0-15)
+ * @param release Release rate (0-15)
+ * @param volume Volume (0-15, where 0=loud, 15=silent)
+ */
+static void play_sound(uint8_t sfx_type, uint16_t freq, uint8_t wave, 
+                       uint8_t attack, uint8_t decay, uint8_t release, uint8_t volume)
+{
+    if (sfx_type >= SFX_TYPE_COUNT) return;
+    
+    // Get base channel for this effect type (each type has 2 channels)
+    uint8_t base_channel = sfx_type * 2;
+    uint8_t channel = base_channel + next_channel[sfx_type];
+    
+    // Release the previous sound on the old channel
+    uint8_t old_channel = base_channel + (1 - next_channel[sfx_type]);
+    stop_sound(old_channel);
+    
+    // Toggle to next channel for this effect type
+    next_channel[sfx_type] = 1 - next_channel[sfx_type];
+    
+    uint16_t psg_addr = PSG_XRAM_ADDR + (channel * 8);
+    
+    // Set frequency (Hz * 3)
+    uint16_t freq_val = freq * 3;
+    RIA.addr0 = psg_addr;
+    RIA.rw0 = freq_val & 0xFF;          // freq low byte
+    RIA.rw0 = (freq_val >> 8) & 0xFF;   // freq high byte
+    
+    // Set duty cycle (50%)
+    RIA.rw0 = 128;
+    
+    // Set volume and attack
+    RIA.rw0 = (volume << 4) | (attack & 0x0F);
+    
+    // Set decay volume to 15 (silent) so sound fades naturally without sustain
+    RIA.rw0 = (15 << 4) | (decay & 0x0F);
+    
+    // Set waveform and release
+    RIA.rw0 = (wave << 4) | (release & 0x0F);
+    
+    // Set pan (center) and gate (on)
+    RIA.rw0 = 0x01;  // Center pan, gate on
 }
 
 /**
@@ -735,6 +848,9 @@ static void update_bullets(void)
                     // Hit! Remove bullet and fighter
                     bullets[i].status = -1;
                     
+                    // Play explosion sound effect (noise crash)
+                    play_sound(SFX_TYPE_ENEMY_HIT, 80, PSG_WAVE_NOISE, 0, 2, 5, 1);
+                    
                     // Clear tractor beam if fighter was attacking (status == 2)
                     if (fighters[f].status == 2) {
                         // TODO: Clear line at lx1, ly1, lx2, ly2
@@ -813,20 +929,29 @@ static void update_fighters(void)
             // Respawn counter (counts down to -FIGHTER_SPAWN_RATE)
             fighters[i].status--;
             if (fighters[i].status <= -FIGHTER_SPAWN_RATE) {
-                // Respawn fighter using SGDK logic - spawn in world coordinates
+                // Respawn fighter off-screen relative to current viewport
                 fighters[i].vx_i = random(16, 256);
                 fighters[i].vy_i = random(16, 256);
                 
-                // Spawn at edge of world, not relative to player
-                fighters[i].x = random(0, SCREEN_WIDTH_D2) + SCREEN_WIDTH + 144;
-                fighters[i].y = random(0, SCREEN_HEIGHT_D2) + SCREEN_HEIGHT + 104;
+                // Choose random edge: 0=right, 1=left, 2=bottom, 3=top
+                uint8_t edge = random(0, 3);
                 
-                // Randomly flip to negative side
-                if (random(0, 1)) {
-                    fighters[i].x = -fighters[i].x;
-                }
-                if (random(0, 1)) {
-                    fighters[i].y = -fighters[i].y;
+                if (edge == 0) {
+                    // Spawn off right edge
+                    fighters[i].x = world_offset_x + SCREEN_WIDTH + random(20, 100);
+                    fighters[i].y = world_offset_y + random(20, SCREEN_HEIGHT - 20);
+                } else if (edge == 1) {
+                    // Spawn off left edge
+                    fighters[i].x = world_offset_x - random(20, 100);
+                    fighters[i].y = world_offset_y + random(20, SCREEN_HEIGHT - 20);
+                } else if (edge == 2) {
+                    // Spawn off bottom edge
+                    fighters[i].x = world_offset_x + random(20, SCREEN_WIDTH - 20);
+                    fighters[i].y = world_offset_y + SCREEN_HEIGHT + random(20, 100);
+                } else {
+                    // Spawn off top edge
+                    fighters[i].x = world_offset_x + random(20, SCREEN_WIDTH - 20);
+                    fighters[i].y = world_offset_y - random(20, 100);
                 }
                 
                 fighters[i].status = 1;
@@ -846,6 +971,10 @@ static void update_fighters(void)
             fighters[i].status = 0;
             active_fighter_count--;
             enemy_score++;  // Enemy gets a point for hitting player
+            
+            // Play deep crash sound effect
+            play_sound(SFX_TYPE_PLAYER_HIT, 60, PSG_WAVE_NOISE, 0, 1, 6, 0);
+            
             continue;
         }
         
@@ -888,11 +1017,21 @@ static void update_fighters(void)
         fighters[i].x += fvx_applied;
         fighters[i].y += fvy_applied;
         
-        // Wrap around map boundaries
-        if (fighters[i].x > MAP_SIZE_D2) fighters[i].x -= MAP_SIZE;
-        if (fighters[i].x < MAP_SIZE_NEG_D2) fighters[i].x += MAP_SIZE;
-        if (fighters[i].y > MAP_SIZE_D2) fighters[i].y -= MAP_SIZE;
-        if (fighters[i].y < MAP_SIZE_NEG_D2) fighters[i].y += MAP_SIZE;
+        // Wrap around relative to viewport - if fighter goes too far off one edge, wrap to opposite edge
+        int16_t fighter_offset_x = fighters[i].x - world_offset_x;
+        int16_t fighter_offset_y = fighters[i].y - world_offset_y;
+        
+        if (fighter_offset_x > SCREEN_WIDTH + 200) {
+            fighters[i].x = world_offset_x - 150;
+        } else if (fighter_offset_x < -200) {
+            fighters[i].x = world_offset_x + SCREEN_WIDTH + 150;
+        }
+        
+        if (fighter_offset_y > SCREEN_HEIGHT + 200) {
+            fighters[i].y = world_offset_y - 150;
+        } else if (fighter_offset_y < -200) {
+            fighters[i].y = world_offset_y + SCREEN_HEIGHT + 150;
+        }
     }
 }
 
@@ -916,6 +1055,9 @@ static void fire_bullet(void)
         unsigned ptr = BULLET_CONFIG + current_bullet_index * sizeof(vga_mode4_sprite_t);
         xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, bullets[current_bullet_index].x);
         xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, bullets[current_bullet_index].y);
+        
+        // Play deep tone sound effect
+        play_sound(SFX_TYPE_PLAYER_FIRE, 110, PSG_WAVE_SQUARE, 0, 3, 4, 0);
         
         current_bullet_index++;
         if (current_bullet_index >= MAX_BULLETS) {
@@ -994,6 +1136,9 @@ static void fire_ebullet(void)
                         unsigned bullet_ptr = EBULLET_CONFIG + current_ebullet_index * sizeof(vga_mode4_sprite_t);
                         xram0_struct_set(bullet_ptr, vga_mode4_sprite_t, x_pos_px, screen_x);
                         xram0_struct_set(bullet_ptr, vga_mode4_sprite_t, y_pos_px, screen_y);
+                        
+                        // Play higher pitched enemy fire sound
+                        play_sound(SFX_TYPE_ENEMY_FIRE, 440, PSG_WAVE_TRIANGLE, 0, 4, 3, 2);
                         
                         // Set fighter to cooldown state
                         fighters[i].status = 2;
@@ -1245,6 +1390,7 @@ static void draw_hud(void)
     static int16_t prev_player_score = -1;
     static int16_t prev_enemy_score = -1;
     static int16_t prev_game_score = -1;
+    static int16_t prev_game_level = -1;
     
     const uint8_t hud_y = 2;
     const uint8_t text_color = 0xFF;
@@ -1255,7 +1401,8 @@ static void draw_hud(void)
     // Check if anything changed
     if (prev_player_score == player_score && 
         prev_enemy_score == enemy_score && 
-        prev_game_score == game_score) {
+        prev_game_score == game_score &&
+        prev_game_level == game_level) {
         return;  // No changes, skip update
     }
     
@@ -1263,6 +1410,7 @@ static void draw_hud(void)
     prev_player_score = player_score;
     prev_enemy_score = enemy_score;
     prev_game_score = game_score;
+    prev_game_level = game_level;
     
     // Format with longer bars for better spacing
     
@@ -1309,6 +1457,10 @@ static void draw_hud(void)
     
     // Draw level indicator at bottom of screen
     const uint16_t level_y = 170;
+    
+    // Clear level area before drawing (wider to cover both text and number)
+    clear_rect(10, level_y, 50, 5);
+    
     draw_text(10, level_y, "LEVEL", text_color);
     char level_buf[3];
     level_buf[0] = '0' + (game_level / 10) % 10;
@@ -1609,6 +1761,7 @@ int main(void)
     
     // Initialize systems
     init_graphics();
+    init_psg();
     init_game();
     
     // Enable keyboard input
