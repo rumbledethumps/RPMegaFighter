@@ -22,6 +22,7 @@
 #include "fighters.h"
 #include "player.h"
 #include "bullets.h"
+#include "sbullets.h"
 #include "sound.h"
 #include "bkgstars.h"
 #include "pause.h"
@@ -286,11 +287,25 @@ static void init_graphics(void)
         xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
     }
     
+    // Set up super bullet sprites (VGA Mode 4 - regular sprites)
+    SBULLET_CONFIG = BULLET_CONFIG + MAX_BULLETS * sizeof(vga_mode4_sprite_t);
+    
+    for (uint8_t i = 0; i < MAX_SBULLETS; i++) {
+        unsigned ptr = SBULLET_CONFIG + i * sizeof(vga_mode4_sprite_t);
+        
+        // Initialize sprite configuration  
+        xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);  // Start offscreen
+        xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, xram_sprite_ptr, SBULLET_DATA);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, log_size, 2);  // 4x4 sprite (2^2)
+        xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
+    }
+    
     // Enable sprite modes:
     // First enable affine sprites (player) - 1 sprite at SPACECRAFT_CONFIG
     xregn(1, 0, 1, 5, 4, 1, SPACECRAFT_CONFIG, 1, 2);
-    // Then enable regular sprites (fighters + ebullets + bullets) - all regular sprites in one call
-    xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS, 1);
+    // Then enable regular sprites (fighters + ebullets + bullets + sbullets) - all regular sprites in one call
+    xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS + MAX_SBULLETS, 1);
     
     // Clear bitmap memory
     RIA.addr0 = 0;
@@ -322,6 +337,7 @@ static void init_game(void)
     
     // Initialize entity pools
     init_bullets();
+    init_sbullets();
     init_fighters();
     init_stars();
     
@@ -499,19 +515,24 @@ int main(void)
         // Enemy bullet system
         fire_ebullet();
         
-        // Handle player fire button (keyboard SPACE or gamepad A/B/C)
-        // A=0x04, B=0x02, C=0x20
+        // Handle player fire buttons
+        // Regular bullets: keyboard SPACE or gamepad A/B buttons
         if (key(KEY_SPACE) || 
-            (gamepad[0].btn0 & 0x04) ||  // A button
-            (gamepad[0].btn0 & 0x02) ||  // B button
-            (gamepad[0].btn0 & 0x20)) {  // C button
+            (gamepad[0].btn0 & GP_BTN_A) ||  // A button
+            (gamepad[0].btn0 & GP_BTN_B)) {  // B button
             fire_bullet();
+        }
+        
+        // Super bullets: gamepad C button only
+        if (gamepad[0].btn0 & GP_BTN_C) {  // C button
+            fire_sbullet(get_player_rotation());
         }
         
             // Update game logic
             update_player();
             update_fighters();
             update_bullets();
+            update_sbullets();
             update_ebullets();
         
         // Render frame

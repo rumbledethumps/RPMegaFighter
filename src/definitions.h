@@ -21,6 +21,7 @@ static int16_t dy = 0;
 #define FIGHTER_DATA    0xEC00  //Enemy fighter Sprite (4x4)
 #define EBULLET_DATA    0xEC20  //Enemy bullet Sprite (2x2)
 #define BULLET_DATA     0xEC28  //Player bullet Sprite (2x2)
+#define SBULLET_DATA    0xEC30  //Super bullet Sprite (4x4)
 
 //XRAM Memory addresses
 #define VGA_CONFIG_START 0xECA0 //Start of graphic config addresses (after gamepad data)
@@ -32,6 +33,7 @@ unsigned BATTLE_CONFIG;         //Enemy battle station sprite config
 unsigned FIGHTER_CONFIG;        //Enemy fighter sprite config
 unsigned EBULLET_CONFIG;        //Enemy bullet sprite config
 unsigned BULLET_CONFIG;         //Player bullet sprite config
+unsigned SBULLET_CONFIG;        //Super bullet sprite config
 unsigned TEXT_CONFIG;           //On screen text configs
 
 

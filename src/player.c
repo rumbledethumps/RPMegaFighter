@@ -1,6 +1,7 @@
 #include "player.h"
 #include "screen.h"
 #include "bullets.h"
+#include "sbullets.h"
 #include "sound.h"
 #include "input.h"
 #include "usb_hid_keys.h"

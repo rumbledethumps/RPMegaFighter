@@ -1,5 +1,6 @@
 #include "title_screen.h"
 #include "screen.h"
+#include "sbullets.h"
 #include <rp6502.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,6 +47,9 @@ void show_title_screen(void)
     const uint8_t red_color = 0x03;      // Pure red
     const uint8_t blue_color = 0x1F;     // Blue
     const uint16_t center_x = 110;       // X position for centered text
+    
+    // Clear any remaining bullets from previous game
+    init_sbullets();
     
     // Clear screen
     RIA.addr0 = 0;

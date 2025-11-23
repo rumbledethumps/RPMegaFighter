@@ -15,6 +15,7 @@ rp6502_asset(rpmegafighter 0x1EB80 images/npbattle.bin)
 rp6502_asset(rpmegafighter 0x1EC00 images/fighter.bin)
 rp6502_asset(rpmegafighter 0x1EC20 images/ebullet.bin)
 rp6502_asset(rpmegafighter 0x1EC28 images/bullet.bin)
+rp6502_asset(rpmegafighter 0x1EC30 images/sbullet.bin)
 rp6502_executable(rpmegafighter
     spaceship2.bin.rp6502
     Earth.bin.rp6502
@@ -23,6 +24,7 @@ rp6502_executable(rpmegafighter
     fighter.bin.rp6502
     ebullet.bin.rp6502
     bullet.bin.rp6502
+    sbullet.bin.rp6502
     DATA file
     RESET file
 )
@@ -33,6 +35,7 @@ target_sources(rpmegafighter PRIVATE
     src/fighters.c
     src/player.c
     src/bullets.c
+    src/sbullets.c
     src/sound.c
     src/bkgstars.c
     src/pause.c
