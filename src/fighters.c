@@ -57,6 +57,7 @@ extern int16_t player_vx_applied, player_vy_applied;
 extern int16_t world_offset_x, world_offset_y;
 extern int16_t scroll_dx, scroll_dy;
 extern int16_t enemy_score;
+extern int16_t game_level;
 extern uint16_t game_frame;
 
 // Sprite configuration addresses
@@ -431,9 +432,9 @@ bool check_bullet_fighter_collision(int16_t bullet_x, int16_t bullet_y,
                 fighters[f].status = 0;
                 active_fighter_count--;
                 
-                // SCORE_BASIC_KILL = 1
-                *player_score_out += 1;
-                *game_score_out += 1;
+                // Award points based on current level
+                *player_score_out += game_level;
+                *game_score_out += game_level;
                 
                 return true;
             }
