@@ -52,8 +52,13 @@ bool check_bullet_fighter_collision(int16_t bullet_x, int16_t bullet_y,
 void decrement_ebullet_cooldown(void);
 
 /**
- * Increase difficulty by decreasing ebullet cooldown
+ * Increase difficulty by decreasing ebullet cooldown and increasing fighter speed
  */
 void increase_fighter_difficulty(void);
+
+/**
+ * Reset difficulty parameters to initial values (called on game over)
+ */
+void reset_fighter_difficulty(void);
 
 #endif // FIGHTERS_H

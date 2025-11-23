@@ -323,6 +323,7 @@ static void init_game(void)
     game_level = 1;
     game_frame = 0;
     reset_pause_state();  // Reset pause state
+    reset_fighter_difficulty();  // Reset fighter difficulty to initial values
     game_over = false;
     
     // Reset player position and state

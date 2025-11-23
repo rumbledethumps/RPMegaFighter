@@ -40,7 +40,8 @@ extern uint8_t keystates[KEYBOARD_BYTES];
 
 // USB HID key codes we use
 #define KEY_SPACE   0x2C  // Spacebar
-#define KEY_UP      0x52  // Up arrow  
+#define KEY_UP      0x52  // Up arrow
+#define KEY_DOWN    0x51  // Down arrow
 #define KEY_LEFT    0x50  // Left arrow
 #define KEY_RIGHT   0x4F  // Right arrow
 
@@ -189,6 +190,7 @@ void update_player(void)
     
     // Handle thrust/acceleration
     bool thrust = key(KEY_UP) || (gamepad[0].sticks & GP_LSTICK_UP);
+    // bool reverse_thrust = key(KEY_DOWN) || (gamepad[0].sticks & GP_LSTICK_DOWN);  // Disabled for game balance
     
     if (thrust) {
         int16_t thrust_vx, thrust_vy;

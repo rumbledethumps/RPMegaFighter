@@ -24,6 +24,11 @@
 #define MIN_EBULLET_COOLDOWN     1
 #define EBULLET_COOLDOWN_DECREASE 4
 
+#define INITIAL_FIGHTER_SPEED_MIN 16
+#define INITIAL_FIGHTER_SPEED_MAX 256
+#define FIGHTER_SPEED_INCREASE    32
+#define MAX_FIGHTER_SPEED         512
+
 #define SHIP_ROTATION_STEPS 24
 
 // ============================================================================
@@ -86,6 +91,10 @@ static uint8_t current_ebullet_index = 0;
 static Fighter fighters[MAX_FIGHTERS];
 int16_t active_fighter_count = 0;  // Non-static, may be used externally
 
+// Fighter speed parameters (increase with level)
+static int16_t fighter_speed_min = INITIAL_FIGHTER_SPEED_MIN;
+static int16_t fighter_speed_max = INITIAL_FIGHTER_SPEED_MAX;
+
 // ============================================================================
 // FUNCTIONS
 // ============================================================================
@@ -93,8 +102,8 @@ int16_t active_fighter_count = 0;  // Non-static, may be used externally
 void init_fighters(void)
 {
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
-        fighters[i].vx_i = random(16, 256);
-        fighters[i].vy_i = random(16, 256);
+        fighters[i].vx_i = random(fighter_speed_min, fighter_speed_max);
+        fighters[i].vy_i = random(fighter_speed_min, fighter_speed_max);
         fighters[i].vx = 0;
         fighters[i].vy = 0;
         fighters[i].status = 1;
@@ -138,8 +147,8 @@ void update_fighters(void)
         if (fighters[i].status <= 0) {
             fighters[i].status--;
             if (fighters[i].status <= -FIGHTER_SPAWN_RATE) {
-                fighters[i].vx_i = random(16, 256);
-                fighters[i].vy_i = random(16, 256);
+                fighters[i].vx_i = random(fighter_speed_min, fighter_speed_max);
+                fighters[i].vy_i = random(fighter_speed_min, fighter_speed_max);
                 
                 uint8_t edge = random(0, 3);
                 
@@ -444,4 +453,17 @@ void increase_fighter_difficulty(void)
     if (max_ebullet_cooldown < MIN_EBULLET_COOLDOWN) {
         max_ebullet_cooldown = MIN_EBULLET_COOLDOWN;
     }
+    
+    // Increase fighter speed range
+    fighter_speed_max += FIGHTER_SPEED_INCREASE;
+    if (fighter_speed_max > MAX_FIGHTER_SPEED) {
+        fighter_speed_max = MAX_FIGHTER_SPEED;
+    }
+}
+
+void reset_fighter_difficulty(void)
+{
+    max_ebullet_cooldown = INITIAL_EBULLET_COOLDOWN;
+    fighter_speed_min = INITIAL_FIGHTER_SPEED_MIN;
+    fighter_speed_max = INITIAL_FIGHTER_SPEED_MAX;
 }
