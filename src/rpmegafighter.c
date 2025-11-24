@@ -583,15 +583,13 @@ int main(void)
         fire_ebullet();
         
         // Handle player fire buttons
-        // Regular bullets: keyboard SPACE or gamepad A/B buttons
-        if (key(KEY_SPACE) || 
-            (gamepad[0].btn0 & GP_BTN_A) ||  // A button
-            (gamepad[0].btn0 & GP_BTN_B)) {  // B button
+        // Regular bullets: keyboard SPACE or gamepad A button
+        if (key(KEY_SPACE) || (gamepad[0].btn0 & GP_BTN_A)) {
             fire_bullet();
         }
         
-        // Super bullets: gamepad C button only
-        if (gamepad[0].btn0 & GP_BTN_C) {  // C button
+        // Super bullets: gamepad B button
+        if (gamepad[0].btn0 & GP_BTN_B) {
             fire_sbullet(get_player_rotation());
         }
         

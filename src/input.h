@@ -59,14 +59,15 @@ typedef struct {
 #define GP_RSTICK_RIGHT   0x80
 
 // Hardware button bit masks - BTN0 (Face buttons and shoulders)
-#define GP_BTN_A          0x04  // A button on controller
-#define GP_BTN_B          0x02  // B button on controller  
-#define GP_BTN_C          0x20  // C button on controller
+// Based on actual RP6502 controller behavior
+#define GP_BTN_Z          0x01  // Z button
+#define GP_BTN_B          0x02  // B or Circle
+#define GP_BTN_A          0x04  // A or Cross
 #define GP_BTN_X          0x08  // X or Square
 #define GP_BTN_Y          0x10  // Y or Triangle
-#define GP_BTN_Z          0x01  // Z
-#define GP_BTN_L1         0x40  // Left shoulder
-#define GP_BTN_R1         0x80  // Right shoulder
+#define GP_BTN_C          0x20  // C button
+#define GP_BTN_L1         0x40  // L1
+#define GP_BTN_R1         0x80  // R1
 
 // Hardware button bit masks - BTN1 (Triggers and special buttons)
 #define GP_BTN_L2         0x01  // Left trigger
@@ -88,6 +89,7 @@ typedef enum {
     ACTION_ROTATE_LEFT,
     ACTION_ROTATE_RIGHT,
     ACTION_FIRE,
+    ACTION_SUPER_FIRE,
     ACTION_PAUSE,
     ACTION_COUNT  // Total number of actions
 } GameAction;
@@ -124,5 +126,11 @@ ButtonMapping get_button_mapping(uint8_t player_id, GameAction action);
 
 // Reset to default button mappings
 void reset_button_mappings(uint8_t player_id);
+
+// Load joystick configuration from file (returns true if successful)
+bool load_joystick_config(void);
+
+// Save joystick configuration to file
+bool save_joystick_config(void);
 
 #endif // INPUT_H
