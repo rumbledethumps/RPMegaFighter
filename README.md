@@ -1,7 +1,7 @@
 # Mega Super Fighter Challenge
 for the [Picocomputer 6502](https://picocomputer.github.io/)
 
-Download the latest rom: [v2025.11.23](https://github.com/jasonfrowe/RPMegaFighter/releases/download/v0.2/rpmegafighter_20251123.rp6502)
+Download the latest rom: [v2025.11.24](https://github.com/jasonfrowe/RPMegaFighter/releases/download/v0.3/rpmegafighter_20251124.rp6502)
 
 ## Overview
 Dive into an epic space battle where you are the
