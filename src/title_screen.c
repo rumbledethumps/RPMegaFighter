@@ -31,17 +31,23 @@ typedef struct {
     uint8_t r2;
 } gamepad_t;
 
-#define GAMEPAD_COUNT 4
+#define GP_CONNECTED 0x80
 #define GP_CONNECTED 0x80
 #define KEYBOARD_INPUT 0xEC20
 #define GAMEPAD_INPUT 0xEC50
 #define KEYBOARD_BYTES 32
+#define GAMEPAD_COUNT 4
+#define GP_BTN_START 0x08  // Start button in BTN1
+#define GP_BTN_A 0x01      // A button in BTN0
+#define GP_BTN_B 0x02      // B button in BTN0
+
+extern uint8_t keystates[KEYBOARD_BYTES];
+#define key(code) (keystates[code >> 3] & (1 << (code & 7)))
+
+#define KEY_ESC 0x29
+#define KEY_ENTER 0x28  // ENTER key to start game
 
 extern gamepad_t gamepad[GAMEPAD_COUNT];
-extern uint8_t keystates[KEYBOARD_BYTES];
-
-// Key macro
-#define key(k) (keystates[(k)>>3] & (1 << ((k) & 7)))
 
 void show_title_screen(void)
 {
@@ -81,7 +87,7 @@ void show_title_screen(void)
     draw_text(center_x - 20, 110, "PRESS START", red_color);
     
     // Draw exit instruction
-    draw_text(center_x - 30, 130, "PUSH A+C TO EXIT", blue_color);
+    draw_text(center_x - 30, 130, "PUSH A+B TO EXIT", blue_color);
     
     printf("Title screen displayed. Press START to begin...\n");
     
@@ -98,10 +104,10 @@ void show_title_screen(void)
         
         // Read input
         RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 2;
-        keystates[0] = RIA.rw0;
         RIA.step0 = 1;
-        keystates[2] = RIA.rw0;
+        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
+            keystates[i] = RIA.rw0;
+        }
         
         RIA.addr0 = GAMEPAD_INPUT;
         RIA.step0 = 1;
@@ -118,61 +124,81 @@ void show_title_screen(void)
             gamepad[i].r2 = RIA.rw0;
         }
         
-        // Check for START button (BTN1 bit 0x02)
+        // Check for keyboard ENTER or gamepad START button to start game
+        bool start_pressed = false;
+        
+        // Check keyboard ENTER
+        if (key(KEY_ENTER)) {
+            start_pressed = true;
+        }
+        
+        // Check gamepad START button (BTN1 bit 0x08)
         if (gamepad[0].dpad & GP_CONNECTED) {
-            if (gamepad[0].btn1 & 0x02) {
-                // Button is currently pressed
-                if (!start_button_was_pressed) {
-                    // This is a new press (edge detection)
-                    start_button_was_pressed = true;
-                    // Stop music
-                    stop_music();
-                    // Clear entire screen before exiting
-                    RIA.addr0 = 0;
-                    RIA.step0 = 1;
-                    for (unsigned i = vlen; i--;) {
-                        RIA.rw0 = 0;
-                    }
-                    printf("START pressed - beginning game!\n");
-                    
-                    // Wait for START button to be released before exiting
-                    while (true) {
-                        if (RIA.vsync == vsync_last)
-                            continue;
-                        vsync_last = RIA.vsync;
-                        
-                        RIA.addr0 = GAMEPAD_INPUT;
-                        RIA.step0 = 1;
-                        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-                            gamepad[i].dpad = RIA.rw0;
-                            gamepad[i].sticks = RIA.rw0;
-                            gamepad[i].btn0 = RIA.rw0;
-                            gamepad[i].btn1 = RIA.rw0;
-                            gamepad[i].lx = RIA.rw0;
-                            gamepad[i].ly = RIA.rw0;
-                            gamepad[i].rx = RIA.rw0;
-                            gamepad[i].ry = RIA.rw0;
-                            gamepad[i].l2 = RIA.rw0;
-                            gamepad[i].r2 = RIA.rw0;
-                        }
-                        
-                        // Exit loop when START button is released
-                        if (!(gamepad[0].btn1 & 0x02)) {
-                            break;
-                        }
-                    }
-                    
-                    return;  // Exit title screen
-                }
-            } else {
-                // Button is not pressed
-                start_button_was_pressed = false;
+            if (gamepad[0].btn1 & GP_BTN_START) {
+                start_pressed = true;
             }
         }
         
-        // Check for A+C buttons pressed together to exit (0x04 + 0x20 = 0x24)
-        if ((gamepad[0].btn0 & 0x04) && (gamepad[0].btn0 & 0x20)) {
-            printf("A+C pressed - exiting...\n");
+        // Handle start with edge detection
+        if (start_pressed) {
+            if (!start_button_was_pressed) {
+                // This is a new press (edge detection)
+                start_button_was_pressed = true;
+                // Stop music
+                stop_music();
+                // Clear entire screen before exiting
+                RIA.addr0 = 0;
+                RIA.step0 = 1;
+                for (unsigned i = vlen; i--;) {
+                    RIA.rw0 = 0;
+                }
+                printf("START/ENTER pressed - beginning game!\n");
+                
+                // Wait for button/key to be released before exiting
+                while (true) {
+                    if (RIA.vsync == vsync_last)
+                        continue;
+                    vsync_last = RIA.vsync;
+                    
+                    // Read keyboard
+                    RIA.addr0 = KEYBOARD_INPUT;
+                    RIA.step0 = 1;
+                    for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
+                        keystates[i] = RIA.rw0;
+                    }
+                    
+                    // Read gamepad
+                    RIA.addr0 = GAMEPAD_INPUT;
+                    RIA.step0 = 1;
+                    for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
+                        gamepad[i].dpad = RIA.rw0;
+                        gamepad[i].sticks = RIA.rw0;
+                        gamepad[i].btn0 = RIA.rw0;
+                        gamepad[i].btn1 = RIA.rw0;
+                        gamepad[i].lx = RIA.rw0;
+                        gamepad[i].ly = RIA.rw0;
+                        gamepad[i].rx = RIA.rw0;
+                        gamepad[i].ry = RIA.rw0;
+                        gamepad[i].l2 = RIA.rw0;
+                        gamepad[i].r2 = RIA.rw0;
+                    }
+                    
+                    // Exit loop when both ENTER and START are released
+                    if (!key(KEY_ENTER) && !(gamepad[0].btn1 & GP_BTN_START)) {
+                        break;
+                    }
+                }
+                
+                return;  // Exit title screen
+            }
+        } else {
+            // Button/key is not pressed
+            start_button_was_pressed = false;
+        }
+        
+        // Check for A+B buttons pressed together to exit
+        if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_B)) {
+            printf("A+B pressed - exiting...\n");
             exit(0);
         }
         

@@ -134,8 +134,12 @@ void update_player(void)
     if (player_rotation_frame >= SHIP_ROT_SPEED) {
         player_rotation_frame = 0;
         
-        bool rotate_left = key(KEY_LEFT) || (gamepad[0].sticks & GP_LSTICK_LEFT);
-        bool rotate_right = key(KEY_RIGHT) || (gamepad[0].sticks & GP_LSTICK_RIGHT);
+        bool rotate_left = key(KEY_LEFT) || 
+                          (gamepad[0].sticks & GP_LSTICK_LEFT) ||
+                          (gamepad[0].dpad & GP_DPAD_LEFT);
+        bool rotate_right = key(KEY_RIGHT) || 
+                           (gamepad[0].sticks & GP_LSTICK_RIGHT) ||
+                           (gamepad[0].dpad & GP_DPAD_RIGHT);
         
         if (rotate_left) {
             player_rotation++;
@@ -152,8 +156,10 @@ void update_player(void)
     }
     
     // Handle thrust/acceleration
-    bool thrust = key(KEY_UP) || (gamepad[0].sticks & GP_LSTICK_UP);
-    // bool reverse_thrust = key(KEY_DOWN) || (gamepad[0].sticks & GP_LSTICK_DOWN);  // Disabled for game balance
+    bool thrust = key(KEY_UP) || 
+                 (gamepad[0].sticks & GP_LSTICK_UP) ||
+                 (gamepad[0].dpad & GP_DPAD_UP);
+    // bool reverse_thrust = key(KEY_DOWN) || (gamepad[0].sticks & GP_LSTICK_DOWN) || (gamepad[0].dpad & GP_DPAD_DOWN);  // Disabled for game balance
     
     if (thrust) {
         int16_t thrust_vx, thrust_vy;

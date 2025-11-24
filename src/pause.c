@@ -24,8 +24,15 @@ typedef struct {
 } gamepad_t;
 
 #define GP_CONNECTED 0x80
+#define GP_BTN_START 0x08  // Start button in BTN1
 
 extern gamepad_t gamepad[4];
+
+// Keyboard support
+#define KEYBOARD_BYTES 32
+extern uint8_t keystates[KEYBOARD_BYTES];
+#define key(code) (keystates[code >> 3] & (1 << (code & 7)))
+#define KEY_ENTER 0x28  // ENTER key for pause
 
 // Pause state
 static bool game_paused = false;
@@ -34,6 +41,7 @@ static bool start_button_pressed = false;  // For edge detection
 void display_pause_message(bool show_paused)
 {
     const uint8_t pause_color = 0xFF;
+    const uint8_t exit_color = 0x03;  // Red for exit message
     const uint16_t center_x = 120;
     const uint16_t center_y = 85;
     
@@ -87,8 +95,12 @@ void display_pause_message(bool show_paused)
         
         // E
         for (uint16_t y = center_y; y < center_y + 12; y++) {
-            set(center_x + 48, y, pause_color);
+            set(center_x + 40 + 8, y, pause_color);
         }
+        
+        // Add exit instruction below PAUSED
+        extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
+        draw_text(center_x - 30, center_y + 20, "A+B TO EXIT", exit_color);
         for (uint16_t x = center_x + 48; x < center_x + 56; x++) {
             set(x, center_y, pause_color);
             set(x, center_y + 6, pause_color);
@@ -107,35 +119,42 @@ void display_pause_message(bool show_paused)
             set(center_x + 67, y, pause_color);
         }
         
-        // Draw "PUSH A+C TO EXIT" below PAUSED
-        draw_text(center_x - 10, center_y + 20, "PUSH A+C TO EXIT", pause_color);
+        // Add exit instruction below PAUSED
+        extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
+        draw_text(center_x - 30, center_y + 20, "A+B TO EXIT", exit_color);
     } else {
-        // Clear PAUSED text by drawing black
-        for (uint16_t x = center_x; x < center_x + 68; x++) {
-            for (uint16_t y = center_y; y < center_y + 12; y++) {
-                set(x, y, 0x00);
-            }
-        }
-        
-        // Clear "PUSH A+C TO EXIT" text
-        clear_rect(center_x - 10, center_y + 20, 90, 5);
+        // Clear the entire pause area
+        extern void clear_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+        clear_rect(center_x - 5, center_y - 5, 60, 30);
     }
 }
 
 void handle_pause_input(void)
 {
-    // Handle pause button (Start) - BTN1 bit 0x02
+    bool pause_button_pressed = false;
+    
+    // Check keyboard ENTER key
+    if (key(KEY_ENTER)) {
+        pause_button_pressed = true;
+    }
+    
+    // Check gamepad START button (BTN1 bit 0x08)
     if (gamepad[0].dpad & GP_CONNECTED) {
-        if (gamepad[0].btn1 & 0x02) {  // START button = 0x02 in BTN1
-            if (!start_button_pressed) {
-                game_paused = !game_paused;
-                display_pause_message(game_paused);
-                start_button_pressed = true;
-                printf("\nGame %s\n", game_paused ? "PAUSED" : "RESUMED");
-            }
-        } else {
-            start_button_pressed = false;
+        if (gamepad[0].btn1 & GP_BTN_START) {
+            pause_button_pressed = true;
         }
+    }
+    
+    // Handle pause toggle with edge detection
+    if (pause_button_pressed) {
+        if (!start_button_pressed) {
+            game_paused = !game_paused;
+            display_pause_message(game_paused);
+            start_button_pressed = true;
+            printf("\nGame %s\n", game_paused ? "PAUSED" : "RESUMED");
+        }
+    } else {
+        start_button_pressed = false;
     }
 }
 
@@ -157,8 +176,8 @@ void reset_pause_state(void)
 
 bool check_pause_exit(void)
 {
-    // Check for A+C buttons pressed together to exit (0x04 + 0x20 = 0x24)
-    if ((gamepad[0].btn0 & 0x04) && (gamepad[0].btn0 & 0x20)) {
+    // Check for A+B buttons pressed together to exit
+    if ((gamepad[0].btn0 & 0x01) && (gamepad[0].btn0 & 0x02)) {
         return true;
     }
     return false;

@@ -59,24 +59,24 @@ typedef struct {
 #define GP_RSTICK_RIGHT   0x80
 
 // Hardware button bit masks - BTN0 (Face buttons and shoulders)
-// Based on actual RP6502 controller behavior
-#define GP_BTN_Z          0x01  // Z button
-#define GP_BTN_B          0x02  // B or Circle
-#define GP_BTN_A          0x04  // A or Cross
-#define GP_BTN_X          0x08  // X or Square
-#define GP_BTN_Y          0x10  // Y or Triangle
-#define GP_BTN_C          0x20  // C button
-#define GP_BTN_L1         0x40  // L1
-#define GP_BTN_R1         0x80  // R1
+// Per RP6502 documentation: https://picocomputer.github.io/ria.html#gamepads
+#define GP_BTN_A          0x01  // bit 0: A or Cross
+#define GP_BTN_B          0x02  // bit 1: B or Circle
+#define GP_BTN_C          0x04  // bit 2: C or Right Paddle
+#define GP_BTN_X          0x08  // bit 3: X or Square
+#define GP_BTN_Y          0x10  // bit 4: Y or Triangle
+#define GP_BTN_Z          0x20  // bit 5: Z or Left Paddle
+#define GP_BTN_L1         0x40  // bit 6: L1
+#define GP_BTN_R1         0x80  // bit 7: R1
 
 // Hardware button bit masks - BTN1 (Triggers and special buttons)
-#define GP_BTN_L2         0x01  // Left trigger
-#define GP_BTN_R2         0x02  // Right trigger / START button (actual mapping)
-#define GP_BTN_SELECT     0x04  // Select
-#define GP_BTN_START      0x02  // START button on controller
-#define GP_BTN_HOME       0x10  // Home button
-#define GP_BTN_L3         0x20  // Left stick press
-#define GP_BTN_R3         0x40  // Right stick press
+#define GP_BTN_L2         0x01  // bit 0: L2
+#define GP_BTN_R2         0x02  // bit 1: R2
+#define GP_BTN_SELECT     0x04  // bit 2: Select/Back
+#define GP_BTN_START      0x08  // bit 3: Start/Menu
+#define GP_BTN_HOME       0x10  // bit 4: Home button
+#define GP_BTN_L3         0x20  // bit 5: L3
+#define GP_BTN_R3         0x40  // bit 6: R3
 
 // ============================================================================
 // BUTTON MAPPING SYSTEM
