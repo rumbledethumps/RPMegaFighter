@@ -63,31 +63,135 @@ extern uint8_t keystates[KEYBOARD_BYTES];
 extern unsigned BULLET_CONFIG;
 
 /**
- * Display level up message and wait briefly
+ * Display level up message and wait for START button
  */
 void show_level_up(void)
 {
     const uint8_t blue_color = 0x1F;
+    const uint8_t white_color = 0xFF;
     const uint16_t center_x = 120;
     const uint16_t center_y = 80;
     
+    // Button definitions
+    #define GP_BTN_START 0x08  // START button in BTN1
+    #define KEY_ENTER 0x28     // ENTER key
+    
     // Draw "LEVEL UP" message
     draw_text(center_x, center_y, "LEVEL UP", blue_color);
+    draw_text(center_x - 45, center_y + 15, "PRESS START TO CONTINUE", white_color);
     
     printf("\n*** LEVEL UP! Now on level %d ***\n", game_level);
     
-    // Wait for 2 seconds (120 frames at 60 Hz)
     uint8_t vsync_last = RIA.vsync;
-    uint16_t wait_frames = 0;
-    while (wait_frames < 120) {
-        if (RIA.vsync != vsync_last) {
-            vsync_last = RIA.vsync;
-            wait_frames++;
+    bool start_pressed = false;
+    
+    // Wait for START button to be released first
+    while (true) {
+        if (RIA.vsync == vsync_last)
+            continue;
+        vsync_last = RIA.vsync;
+        
+        // Read input
+        RIA.addr0 = KEYBOARD_INPUT;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
+            keystates[i] = RIA.rw0;
+        }
+        
+        RIA.addr0 = GAMEPAD_INPUT;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
+            gamepad[i].dpad = RIA.rw0;
+            gamepad[i].sticks = RIA.rw0;
+            gamepad[i].btn0 = RIA.rw0;
+            gamepad[i].btn1 = RIA.rw0;
+            gamepad[i].lx = RIA.rw0;
+            gamepad[i].ly = RIA.rw0;
+            gamepad[i].rx = RIA.rw0;
+            gamepad[i].ry = RIA.rw0;
+            gamepad[i].l2 = RIA.rw0;
+            gamepad[i].r2 = RIA.rw0;
+        }
+        
+        // Check if START or ENTER is released
+        if (!(gamepad[0].btn1 & GP_BTN_START) && !key(KEY_ENTER)) {
+            break;
+        }
+    }
+    
+    // Now wait for START or ENTER to be pressed
+    while (true) {
+        if (RIA.vsync == vsync_last)
+            continue;
+        vsync_last = RIA.vsync;
+        
+        // Read input
+        RIA.addr0 = KEYBOARD_INPUT;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
+            keystates[i] = RIA.rw0;
+        }
+        
+        RIA.addr0 = GAMEPAD_INPUT;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
+            gamepad[i].dpad = RIA.rw0;
+            gamepad[i].sticks = RIA.rw0;
+            gamepad[i].btn0 = RIA.rw0;
+            gamepad[i].btn1 = RIA.rw0;
+            gamepad[i].lx = RIA.rw0;
+            gamepad[i].ly = RIA.rw0;
+            gamepad[i].rx = RIA.rw0;
+            gamepad[i].ry = RIA.rw0;
+            gamepad[i].l2 = RIA.rw0;
+            gamepad[i].r2 = RIA.rw0;
+        }
+        
+        // Check for START button or ENTER key
+        bool start_now = (gamepad[0].btn1 & GP_BTN_START) || key(KEY_ENTER);
+        
+        if (start_now && !start_pressed) {
+            break;  // START pressed, continue to next level
+        }
+        start_pressed = start_now;
+    }
+    
+    // Wait for START button to be released before exiting
+    while (true) {
+        if (RIA.vsync == vsync_last)
+            continue;
+        vsync_last = RIA.vsync;
+        
+        // Read input
+        RIA.addr0 = KEYBOARD_INPUT;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
+            keystates[i] = RIA.rw0;
+        }
+        
+        RIA.addr0 = GAMEPAD_INPUT;
+        RIA.step0 = 1;
+        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
+            gamepad[i].dpad = RIA.rw0;
+            gamepad[i].sticks = RIA.rw0;
+            gamepad[i].btn0 = RIA.rw0;
+            gamepad[i].btn1 = RIA.rw0;
+            gamepad[i].lx = RIA.rw0;
+            gamepad[i].ly = RIA.rw0;
+            gamepad[i].rx = RIA.rw0;
+            gamepad[i].ry = RIA.rw0;
+            gamepad[i].l2 = RIA.rw0;
+            gamepad[i].r2 = RIA.rw0;
+        }
+        
+        // Check if START and ENTER are both released
+        if (!(gamepad[0].btn1 & GP_BTN_START) && !key(KEY_ENTER)) {
+            break;  // Button released, safe to exit
         }
     }
     
     // Clear the message
-    clear_rect(center_x, center_y, 80, 5);
+    clear_rect(center_x - 45, center_y, 150, 25);
 }
 
 /**

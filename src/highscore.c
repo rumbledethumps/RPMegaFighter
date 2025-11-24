@@ -5,6 +5,7 @@
 #include "highscore.h"
 #include "input.h"
 #include "usb_hid_keys.h"
+#include "music.h"
 #include <stdio.h>
 #include <string.h>
 #include <rp6502.h>
@@ -186,6 +187,9 @@ void get_player_initials(char* name)
             continue;
         vsync_last = RIA.vsync;
         
+        // Update music
+        update_music();
+        
         // Read input
         RIA.addr0 = KEYBOARD_INPUT;
         RIA.step0 = 1;
@@ -223,6 +227,9 @@ void get_player_initials(char* name)
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
+        
+        // Update music
+        update_music();
         
         // Read input
         RIA.addr0 = KEYBOARD_INPUT;

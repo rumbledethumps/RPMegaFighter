@@ -130,4 +130,16 @@ void update_music(void);
  */
 bool is_music_playing(void);
 
+/**
+ * Increase music tempo by decreasing frames per beat
+ * Called when player levels up
+ */
+void increase_music_tempo(void);
+
+/**
+ * Reset music tempo to default
+ * Called when game ends or returns to title screen
+ */
+void reset_music_tempo(void);
+
 #endif // MUSIC_H

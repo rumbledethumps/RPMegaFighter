@@ -40,6 +40,7 @@ typedef struct {
 #define GP_BTN_START 0x08  // Start button in BTN1
 #define GP_BTN_A 0x01      // A button in BTN0
 #define GP_BTN_B 0x02      // B button in BTN0
+#define GP_BTN_Y 0x10      // Y button in BTN0
 
 extern uint8_t keystates[KEYBOARD_BYTES];
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
@@ -87,7 +88,7 @@ void show_title_screen(void)
     draw_text(center_x - 20, 110, "PRESS START", red_color);
     
     // Draw exit instruction
-    draw_text(center_x - 30, 130, "PUSH A+B TO EXIT", blue_color);
+    draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
     
     printf("Title screen displayed. Press START to begin...\n");
     
@@ -196,9 +197,9 @@ void show_title_screen(void)
             start_button_was_pressed = false;
         }
         
-        // Check for A+B buttons pressed together to exit
-        if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_B)) {
-            printf("A+B pressed - exiting...\n");
+        // Check for A+Y buttons pressed together to exit
+        if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_Y)) {
+            printf("A+Y pressed - exiting...\n");
             exit(0);
         }
         

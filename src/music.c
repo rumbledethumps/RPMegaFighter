@@ -16,7 +16,10 @@
 #define MUSIC_CHANNEL_COUNT 4
 
 // Tempo: 120 BPM = 2 beats per second = 1 beat per 30 frames (at 60 FPS)
-#define FRAMES_PER_BEAT 15
+// This value decreases with each level to speed up the music
+#define DEFAULT_FRAMES_PER_BEAT 15
+#define MIN_FRAMES_PER_BEAT 5
+static int frames_per_beat = DEFAULT_FRAMES_PER_BEAT;
 
 // Waveforms
 #define WAVE_SQUARE 1
@@ -307,7 +310,7 @@ static void update_track(MusicTrack* track)
     set_note(track->channel, current->freq, track->instrument);
     
     // Set duration (convert beats to frames)
-    track->frames_left = current->duration * FRAMES_PER_BEAT;
+    track->frames_left = current->duration * frames_per_beat;
     
     // Move to next note
     track->position++;
@@ -357,7 +360,7 @@ void start_music(const Note* melody, const Note* bass, const Note* kick, const N
     if (reference_track) {
         const Note* note = reference_track;
         while (note->freq != 0 || note->duration != 0) {
-            master_loop_frames += note->duration * FRAMES_PER_BEAT;
+            master_loop_frames += note->duration * frames_per_beat;
             note++;
         }
     }
@@ -370,7 +373,7 @@ void start_music(const Note* melody, const Note* bass, const Note* kick, const N
         if (tracks[i].active && tracks[i].sequence) {
             const Note* first_note = &tracks[i].sequence[0];
             set_note(tracks[i].channel, first_note->freq, tracks[i].instrument);
-            tracks[i].frames_left = first_note->duration * FRAMES_PER_BEAT;
+            tracks[i].frames_left = first_note->duration * frames_per_beat;
             tracks[i].position = 1;  // Move to next note for subsequent updates
         }
     }
@@ -415,7 +418,7 @@ void update_music(void)
                 // Immediately play first note of the loop
                 const Note* first_note = &tracks[i].sequence[0];
                 set_note(tracks[i].channel, first_note->freq, tracks[i].instrument);
-                tracks[i].frames_left = first_note->duration * FRAMES_PER_BEAT;
+                tracks[i].frames_left = first_note->duration * frames_per_beat;
                 tracks[i].position = 1;  // Move to next note for subsequent updates
             }
         }
@@ -435,4 +438,16 @@ void update_music(void)
 bool is_music_playing(void)
 {
     return music_playing;
+}
+
+void increase_music_tempo(void)
+{
+    if (frames_per_beat > MIN_FRAMES_PER_BEAT) {
+        frames_per_beat--;
+    }
+}
+
+void reset_music_tempo(void)
+{
+    frames_per_beat = DEFAULT_FRAMES_PER_BEAT;
 }

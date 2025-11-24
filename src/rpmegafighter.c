@@ -350,6 +350,7 @@ static void init_game(void)
     game_frame = 0;
     reset_pause_state();  // Reset pause state
     reset_fighter_difficulty();  // Reset fighter difficulty to initial values
+    reset_music_tempo();  // Reset music tempo to default
     game_over = false;
     
     // Reset player position and state
@@ -511,7 +512,7 @@ int main(void)
     xregn(0, 0, 2, 1, GAMEPAD_INPUT);
     
     printf("\nControls:\n");
-    printf("  Keyboard: Arrow keys to rotate/thrust, SPACE to fire\n");
+    printf("  Keyboard: Arrow keys to rotate/thrust, SPACE/SHIFT to fire\n");
     printf("  Gamepad:  Left stick to rotate/thrust, A/B to fire\n");
     printf("  ESC to quit, START to pause\n\n");
     
@@ -563,9 +564,9 @@ int main(void)
         
         // Skip updates if paused
         if (currently_paused) {
-            // Check for A+C buttons pressed together to exit
+            // Check for A+Y buttons pressed together to exit
             if (check_pause_exit()) {
-                printf("\nA+C pressed - Exiting game...\n");
+                printf("\nA+Y pressed - Exiting game...\n");
                 stop_music();
                 break;
             }
@@ -588,8 +589,8 @@ int main(void)
             fire_bullet();
         }
         
-        // Super bullets: keyboard C or gamepad B button (0x02)
-        if (key(KEY_C) || (gamepad[0].btn0 & GP_BTN_B)) {
+        // Super bullets: keyboard Left Shift or gamepad B button (0x02)
+        if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_B)) {
             fire_sbullet(get_player_rotation());
         }
         
@@ -618,6 +619,9 @@ int main(void)
             // Increase difficulty by reducing enemy bullet cooldown
             increase_fighter_difficulty();
             
+            // Speed up the music
+            increase_music_tempo();
+            
             // Show level up screen
             show_level_up();
             
@@ -632,6 +636,7 @@ int main(void)
         if (enemy_score >= SCORE_TO_WIN) {
             // Enemy wins - game over
             stop_music();  // Stop gameplay music
+            reset_music_tempo();  // Reset tempo for next game
             show_game_over();
             
             // Set flag to exit gameplay loop and return to title screen

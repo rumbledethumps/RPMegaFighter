@@ -100,7 +100,7 @@ void display_pause_message(bool show_paused)
         
         // Add exit instruction below PAUSED
         extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
-        draw_text(center_x - 30, center_y + 20, "A+B TO EXIT", exit_color);
+        draw_text(center_x + 10, center_y + 20, "A+Y TO EXIT", exit_color);
         for (uint16_t x = center_x + 48; x < center_x + 56; x++) {
             set(x, center_y, pause_color);
             set(x, center_y + 6, pause_color);
@@ -120,12 +120,12 @@ void display_pause_message(bool show_paused)
         }
         
         // Add exit instruction below PAUSED
-        extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
-        draw_text(center_x - 30, center_y + 20, "A+B TO EXIT", exit_color);
+        // extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
+        // draw_text(center_x - 30, center_y + 20, "A+Y TO EXIT", exit_color);
     } else {
         // Clear the entire pause area
         extern void clear_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-        clear_rect(center_x - 5, center_y - 5, 60, 30);
+        clear_rect(center_x - 5, center_y - 5, 80, 30);
     }
 }
 
@@ -176,8 +176,8 @@ void reset_pause_state(void)
 
 bool check_pause_exit(void)
 {
-    // Check for A+B buttons pressed together to exit
-    if ((gamepad[0].btn0 & 0x01) && (gamepad[0].btn0 & 0x02)) {
+    // Check for A+Y buttons pressed together to exit
+    if ((gamepad[0].btn0 & 0x01) && (gamepad[0].btn0 & 0x10)) {
         return true;
     }
     return false;
