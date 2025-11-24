@@ -23,12 +23,12 @@ ButtonMapping button_mappings[GAMEPAD_COUNT][ACTION_COUNT];
  */
 void handle_input(void)
 {
-    // Read keyboard state
+    // Read all keyboard state bytes
     RIA.addr0 = KEYBOARD_INPUT;
-    RIA.step0 = 2;
-    keystates[0] = RIA.rw0;
     RIA.step0 = 1;
-    keystates[2] = RIA.rw0;
+    for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
+        keystates[i] = RIA.rw0;
+    }
     
     // Read gamepad data
     RIA.addr0 = GAMEPAD_INPUT;
