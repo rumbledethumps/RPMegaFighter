@@ -26,7 +26,7 @@ backward or slow down.
 
 **Weapons and Abilities**
 - **A Button:** Main gun (primary weapon).
-- **B Button:** Spread gun (slow fire rate, additional firepower).
+- **X Button:** Spread gun (slow fire rate, additional firepower).
 
 Press **START** to PAUSE the game.
 
@@ -70,7 +70,7 @@ weapon. With its high rate of
 fire, it is very effective against
 fighters at close and far range.
 
-The **B** button fires a spread shot of 3 projectiles.
+The **X** button fires a spread shot of 3 projectiles.
 It is very effective against close-by enemies and
 enemies travelling in packs. It has a much slower
 rate of fire.
