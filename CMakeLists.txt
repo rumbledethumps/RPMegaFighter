@@ -27,6 +27,7 @@ rp6502_executable(rpmegafighter
     sbullet.bin.rp6502
     DATA file
     RESET file
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/rpmegafighter.hlp
 )
 target_sources(rpmegafighter PRIVATE
     src/rpmegafighter.c
