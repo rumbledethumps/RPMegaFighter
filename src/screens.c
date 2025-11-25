@@ -240,7 +240,7 @@ void show_game_over(void)
     
     // Draw "GAME OVER" message
     draw_text(center_x, 70, "GAME OVER", red_color);
-    draw_text(center_x - 30, 90, "HIT FIRE TO CONTINUE", red_color);
+    draw_text(center_x - 30, 90, "HIT B TO CONTINUE", red_color);
     
     printf("\n*** GAME OVER ***\n");
     printf("Final Level: %d\n", game_level);

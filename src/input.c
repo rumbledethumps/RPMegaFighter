@@ -99,7 +99,7 @@ void reset_button_mappings(uint8_t player_id)
     // ACTION_SUPER_FIRE: C key or B button (for sbullets)
     button_mappings[player_id][ACTION_SUPER_FIRE].keyboard_key = KEY_C;
     button_mappings[player_id][ACTION_SUPER_FIRE].gamepad_button = 2; // btn0 field
-    button_mappings[player_id][ACTION_SUPER_FIRE].gamepad_mask = GP_BTN_B;
+    button_mappings[player_id][ACTION_SUPER_FIRE].gamepad_mask = GP_BTN_X;
     
     // ACTION_PAUSE: ESC or START button
     button_mappings[player_id][ACTION_PAUSE].keyboard_key = KEY_ESC;

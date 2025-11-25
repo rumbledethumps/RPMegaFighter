@@ -1,0 +1,35 @@
+#!RP6502
+#Mega Super Fighter Challenge
+#for the [Picocomputer 6502](https://picocomputer.github.io/)
+#
+#Overview
+#Dive into an epic space battle where you are the
+#last hope against an overwhelming armada of
+#alien ships. In Mega Super Fighter Challenge,
+#your mission is to destroy as many enemy ships
+#as possible before they can obliterate you. The
+#first player to reach 100 points triumphs in this
+#high-intensity space shooter.
+#Each level bring new challenges and new power-
+#ups.
+#
+#Press **START** to begin the game.
+#
+#**Controls:**
+#
+#**D-Pad Control R** (rotational style):
+#- **Up**: Move ship forward.
+#- **Left/Right**: Rotate direction of the ship.
+#- **Down**: Activate reverse engines to move
+#backward or slow down.
+#
+#**Weapons and Abilities**
+#- **A Button:** Main gun (primary weapon).
+#- **B Button:** Spread gun (slow fire rate, additional firepower).
+#
+#Press **START** to PAUSE the game.
+#
+#**Points:**
+#- Destroying basic enemy ships grants 1 point.
+#- If the enemy shoots you, you get a point
+#- If you crash into the enemy, the enemy get 2 points!

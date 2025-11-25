@@ -589,8 +589,8 @@ int main(void)
             fire_bullet();
         }
         
-        // Super bullets: keyboard Left Shift or gamepad B button (0x02)
-        if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_B)) {
+        // Super bullets: keyboard Left Shift or gamepad X button (0x08)
+        if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_X)) {
             fire_sbullet(get_player_rotation());
         }
         
