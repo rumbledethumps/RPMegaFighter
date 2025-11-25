@@ -1,4 +1,5 @@
 #include "player.h"
+#include "constants.h"
 #include "screen.h"
 #include "bullets.h"
 #include "sbullets.h"
@@ -8,16 +9,6 @@
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-#define BOUNDARY_X          60
-#define BOUNDARY_Y          40
-
-#define MAX_BULLETS         8
-#define BULLET_COOLDOWN     8
 
 // ============================================================================
 // TYPES

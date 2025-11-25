@@ -2,6 +2,7 @@
 #define GRAPHICS_H
 
 #include "screen.h"
+#include "constants.h"
 #include <stdlib.h>
 
 // Swap macro for line drawing

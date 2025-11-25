@@ -1,4 +1,5 @@
 #include "title_screen.h"
+#include "constants.h"
 #include "screen.h"
 #include "sbullets.h"
 #include "music.h"
@@ -31,22 +32,8 @@ typedef struct {
     uint8_t r2;
 } gamepad_t;
 
-#define GP_CONNECTED 0x80
-#define GP_CONNECTED 0x80
-#define KEYBOARD_INPUT 0xEC20
-#define GAMEPAD_INPUT 0xEC50
-#define KEYBOARD_BYTES 32
-#define GAMEPAD_COUNT 4
-#define GP_BTN_START 0x08  // Start button in BTN1
-#define GP_BTN_A 0x01      // A button in BTN0
-#define GP_BTN_B 0x02      // B button in BTN0
-#define GP_BTN_Y 0x10      // Y button in BTN0
-
 extern uint8_t keystates[KEYBOARD_BYTES];
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
-
-#define KEY_ESC 0x29
-#define KEY_ENTER 0x28  // ENTER key to start game
 
 extern gamepad_t gamepad[GAMEPAD_COUNT];
 

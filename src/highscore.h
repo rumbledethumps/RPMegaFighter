@@ -7,11 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-// High score constants
-#define MAX_HIGH_SCORES 10
-#define HIGH_SCORE_NAME_LEN 3
-#define HIGH_SCORE_FILE "HIGHSCOR.DAT"
+#include "constants.h"
 
 // High score structure
 typedef struct {

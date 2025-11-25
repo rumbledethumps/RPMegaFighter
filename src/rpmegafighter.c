@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "usb_hid_keys.h"
+#include "constants.h"
 #include "definitions.h"
 #include "screen.h"
 #include "random.h"
@@ -31,44 +32,6 @@
 #include "text.h"
 #include "input.h"
 #include "screens.h"
-
-// ============================================================================
-// GAME CONSTANTS
-// ============================================================================
-
-// World/map dimensions  
-#define MAP_SIZE            1024
-#define MAP_SIZE_M1         1023
-#define MAP_SIZE_D2         512
-#define MAP_SIZE_NEG        -1024
-#define MAP_SIZE_NEG_D2     -512
-
-// Scroll boundaries
-#define BOUNDARY_X          100
-#define BOUNDARY_Y          80
-
-// Bullet properties
-#define MAX_BULLETS         8
-#define BULLET_COOLDOWN     8
-#define MAX_EBULLETS        16     // Enemy bullets
-#define EBULLET_COOLDOWN    8
-#define INITIAL_EBULLET_COOLDOWN 10  // Starting cooldown for enemy bullets
-#define MIN_EBULLET_COOLDOWN     1   // Minimum cooldown (difficulty cap)
-#define EBULLET_COOLDOWN_DECREASE 2  // Decrease per level
-#define MAX_SBULLETS        3     // Spread shot bullets
-#define SBULLET_COOLDOWN    45
-
-// Enemy fighter properties
-#define MAX_FIGHTERS        30
-#define FIGHTER_SPAWN_RATE  128   // Frames between fighter spawns
-#define EFIRE_COOLDOWN_TIMER 16   // Frames a fighter must wait between shots
-
-// Scoring
-#define SCORE_TO_WIN        100
-#define SCORE_BASIC_KILL    1
-#define SCORE_MINE_KILL     5
-#define SCORE_SHIELD_KILL   5
-#define SCORE_MINE_HIT      -10
 
 // ============================================================================
 // GAME STRUCTURES
@@ -437,20 +400,20 @@ static void render_game(void)
     
     // Wrap Earth horizontally - same as stars
     if (earth_x <= -30) {
-        earth_x += STARFIELD_2X;
+        earth_x += WORLD_X;
     }
-    if (earth_x > STARFIELD_2X - 30) {
-        earth_x -= STARFIELD_2X;
+    if (earth_x > WORLD_X - 30) {
+        earth_x -= WORLD_X;
     }
     
     // Wrap Earth vertically - same as stars
     if (earth_y <= -30) {
         // When wrapping from top, place at bottom minus HUD offset
-        earth_y += STARFIELD_2Y;
+        earth_y += WORLD_Y;
     }
-    if (earth_y > STARFIELD_2Y - 30) {
+    if (earth_y > WORLD_Y - 30) {
         // When wrapping from bottom, place below HUD area
-        earth_y -= STARFIELD_2Y;
+        earth_y -= WORLD_Y;
     }
     
     xram0_struct_set(EARTH_CONFIG, vga_mode4_sprite_t, x_pos_px, earth_x);

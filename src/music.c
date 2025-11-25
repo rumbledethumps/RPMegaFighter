@@ -1,4 +1,5 @@
 #include "music.h"
+#include "constants.h"
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -7,9 +8,6 @@
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-// PSG memory location (must match sound.c)
-#define PSG_XRAM_ADDR 0xFF00
 
 // Music channels (4-7, leaving 0-3 for sound effects)
 #define MUSIC_CHANNEL_START 4

@@ -1,3 +1,4 @@
+#include "constants.h"
 #include "pause.h"
 #include "screen.h"
 #include <rp6502.h>
@@ -23,16 +24,11 @@ typedef struct {
     uint8_t r2;
 } gamepad_t;
 
-#define GP_CONNECTED 0x80
-#define GP_BTN_START 0x08  // Start button in BTN1
-
 extern gamepad_t gamepad[4];
 
 // Keyboard support
-#define KEYBOARD_BYTES 32
 extern uint8_t keystates[KEYBOARD_BYTES];
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
-#define KEY_ENTER 0x28  // ENTER key for pause
 
 // Pause state
 static bool game_paused = false;

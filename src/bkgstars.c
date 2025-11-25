@@ -1,4 +1,5 @@
 #include "bkgstars.h"
+#include "constants.h"
 #include <rp6502.h>
 #include <stdbool.h>
 #include <stdlib.h>

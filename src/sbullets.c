@@ -1,20 +1,19 @@
 #include "sbullets.h"
+#include "constants.h"
 #include "screen.h"
 #include "sound.h"
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-// Get SHIP_ROTATION_STEPS from screen.h
+// Get SHIP_ROTATION_STEPS from constants.h
 // (It's defined there as the number of rotation steps)
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-#define MAX_SBULLETS        3
-#define SBULLET_COOLDOWN    120  // Frames between super bullet shots
-#define SBULLET_SPEED_SHIFT 6   // Divide by 64 for bullet speed (~4 pixels/frame)
+
 
 // ============================================================================
 // EXTERNAL DEPENDENCIES
@@ -80,7 +79,7 @@ bool fire_sbullet(uint8_t player_rotation)
     }
     
     // Reset cooldown
-    sbullet_cooldown_timer = SBULLET_COOLDOWN;
+    sbullet_cooldown_timer = SBULLET_COOLDOWN_MAX;
     
     // Fire 3 bullets: left (-1), center (0), right (+1) of player rotation
     int16_t start_x = player_x + 2;  // Center of player sprite (8x8 -> 4 pixels offset)

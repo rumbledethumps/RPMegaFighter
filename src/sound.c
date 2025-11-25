@@ -1,14 +1,7 @@
 #include "sound.h"
+#include "constants.h"
 #include <rp6502.h>
 #include <stdint.h>
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-// PSG memory location in XRAM (high memory, safe from graphics)
-// Use upper XRAM at 0xFF00 (well away from all graphics data)
-#define PSG_XRAM_ADDR 0xFF00
 
 // ============================================================================
 // MODULE STATE

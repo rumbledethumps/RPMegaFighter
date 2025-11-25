@@ -3,12 +3,7 @@
  */
 
 #include "input.h"
-
-// Screen dimensions (used by modules)
-#define SCREEN_WIDTH        320
-#define SCREEN_HEIGHT       180
-#define SCREEN_WIDTH_D2     160
-#define SCREEN_HEIGHT_D2    90
+#include "constants.h"
 
 static int16_t dx = 0;   // scrolling of visible screen relative to World map
 static int16_t dy = 0;

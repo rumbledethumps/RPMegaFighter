@@ -3,13 +3,12 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "constants.h"
 
 // ============================================================================
 // KEYBOARD SUPPORT
 // ============================================================================
 
-#define KEYBOARD_INPUT  0xEC20  // XRAM address for keyboard data
-#define KEYBOARD_BYTES  32      // 32 bytes for 256 key states
 
 // Keyboard state array and macro
 extern uint8_t keystates[KEYBOARD_BYTES];
@@ -22,9 +21,7 @@ extern bool handled_key;
 // GAMEPAD SUPPORT
 // ============================================================================
 
-#define GAMEPAD_INPUT     0xEC50  // XRAM address for gamepad data
-#define GAMEPAD_COUNT     4       // Support up to 4 gamepads
-#define GAMEPAD_DATA_SIZE 10      // 10 bytes per gamepad
+
 
 // Gamepad structure (10 bytes per gamepad)
 typedef struct {
@@ -40,43 +37,7 @@ typedef struct {
     uint8_t r2;        // Right trigger analog (0-255)
 } gamepad_t;
 
-// Hardware button bit masks - DPAD
-#define GP_DPAD_UP        0x01
-#define GP_DPAD_DOWN      0x02
-#define GP_DPAD_LEFT      0x04
-#define GP_DPAD_RIGHT     0x08
-#define GP_SONY           0x40  // Sony button faces (Circle/Cross/Square/Triangle)
-#define GP_CONNECTED      0x80  // Gamepad is connected
 
-// Hardware button bit masks - ANALOG STICKS
-#define GP_LSTICK_UP      0x01
-#define GP_LSTICK_DOWN    0x02
-#define GP_LSTICK_LEFT    0x04
-#define GP_LSTICK_RIGHT   0x08
-#define GP_RSTICK_UP      0x10
-#define GP_RSTICK_DOWN    0x20
-#define GP_RSTICK_LEFT    0x40
-#define GP_RSTICK_RIGHT   0x80
-
-// Hardware button bit masks - BTN0 (Face buttons and shoulders)
-// Per RP6502 documentation: https://picocomputer.github.io/ria.html#gamepads
-#define GP_BTN_A          0x01  // bit 0: A or Cross
-#define GP_BTN_B          0x02  // bit 1: B or Circle
-#define GP_BTN_C          0x04  // bit 2: C or Right Paddle
-#define GP_BTN_X          0x08  // bit 3: X or Square
-#define GP_BTN_Y          0x10  // bit 4: Y or Triangle
-#define GP_BTN_Z          0x20  // bit 5: Z or Left Paddle
-#define GP_BTN_L1         0x40  // bit 6: L1
-#define GP_BTN_R1         0x80  // bit 7: R1
-
-// Hardware button bit masks - BTN1 (Triggers and special buttons)
-#define GP_BTN_L2         0x01  // bit 0: L2
-#define GP_BTN_R2         0x02  // bit 1: R2
-#define GP_BTN_SELECT     0x04  // bit 2: Select/Back
-#define GP_BTN_START      0x08  // bit 3: Start/Menu
-#define GP_BTN_HOME       0x10  // bit 4: Home button
-#define GP_BTN_L3         0x20  // bit 5: L3
-#define GP_BTN_R3         0x40  // bit 6: R3
 
 // ============================================================================
 // BUTTON MAPPING SYSTEM

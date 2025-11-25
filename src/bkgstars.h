@@ -2,13 +2,7 @@
 #define BKGSTARS_H
 
 #include <stdint.h>
-
-// Background star constants
-#define NSTAR 32        // Number of stars in the background
-#define STARFIELD_X 512 // Size of starfield (how often star pattern repeats)
-#define STARFIELD_Y 256
-#define STARFIELD_2X 1024 // Size of starfield (how often star pattern repeats)
-#define STARFIELD_2Y 512
+#include "constants.h"
 
 // Star position and color arrays
 extern int16_t star_x[NSTAR];      // X-position -- World coordinates

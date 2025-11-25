@@ -1,4 +1,5 @@
 #include "bullets.h"
+#include "constants.h"
 #include "screen.h"
 #include "sound.h"
 #include <rp6502.h>
@@ -8,9 +9,6 @@
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-#define MAX_BULLETS         8
-#define MAX_SBULLETS        3
 
 // ============================================================================
 // EXTERNAL DEPENDENCIES

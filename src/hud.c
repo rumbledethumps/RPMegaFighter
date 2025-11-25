@@ -1,4 +1,5 @@
 #include "hud.h"
+#include "constants.h"
 #include "screen.h"
 #include <rp6502.h>
 #include <stdint.h>
@@ -9,9 +10,6 @@ extern int16_t player_score;
 extern int16_t enemy_score;
 extern int16_t game_score;
 extern int16_t game_level;
-
-// Constants from main file
-#define SCORE_TO_WIN        100
 
 // Graphics functions from main file
 extern void draw_text(int16_t x, int16_t y, const char* text, uint8_t color);

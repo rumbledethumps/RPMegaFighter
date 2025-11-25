@@ -1,4 +1,5 @@
 #include "fighters.h"
+#include "constants.h"
 #include "screen.h"
 #include "random.h"
 #include "sound.h"
@@ -11,21 +12,6 @@
 // CONSTANTS
 // ============================================================================
 
-#define MAX_FIGHTERS        30
-#define FIGHTER_SPAWN_RATE  128
-#define EFIRE_COOLDOWN_TIMER 16
-
-#define MAX_EBULLETS        16
-#define INITIAL_EBULLET_COOLDOWN 30
-#define MIN_EBULLET_COOLDOWN     1
-#define EBULLET_COOLDOWN_DECREASE 5
-
-#define INITIAL_FIGHTER_SPEED_MIN 16
-#define INITIAL_FIGHTER_SPEED_MAX 256
-#define FIGHTER_SPEED_INCREASE    32
-#define MAX_FIGHTER_SPEED         512
-
-#define SHIP_ROTATION_STEPS 24
 
 // ============================================================================
 // TYPES
@@ -234,18 +220,19 @@ void update_fighters(void)
 
 void fire_ebullet(void)
 {
-    if (ebullet_cooldown > 0) {
+    if (ebullet_cooldown > 0) { //Global Fighter fire cooldown
         return;
     }
     
-    ebullet_cooldown = max_ebullet_cooldown;
+    // ebullet_cooldown = max_ebullet_cooldown;
+    ebullet_cooldown = NEBULLET_TIMER_MAX;
     
     int16_t player_world_x = player_x + world_offset_x;
     int16_t player_world_y = player_y + world_offset_y;
     
     if (ebullets[current_ebullet_index].status < 0) {
         for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
-            if (fighters[i].status == 1) {
+            if (fighters[i].status == 1) {  // A single ship is ready to fire
                 int16_t screen_x = fighters[i].x - world_offset_x;
                 int16_t screen_y = fighters[i].y - world_offset_y;
                 
@@ -299,9 +286,9 @@ void fire_ebullet(void)
                         break;
                     }
                 }
-            } else if (fighters[i].status > 1) {
+            } else if (fighters[i].status > 1) {  // Cooling down after firing
                 fighters[i].status++;
-                if (fighters[i].status > EFIRE_COOLDOWN_TIMER) {
+                if (fighters[i].status > max_ebullet_cooldown) {
                     fighters[i].status = 1;
                 }
             }

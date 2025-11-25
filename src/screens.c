@@ -1,4 +1,5 @@
 #include "screens.h"
+#include "constants.h"
 #include <rp6502.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,12 +48,6 @@ typedef struct {
     uint8_t r2;
 } gamepad_t;
 
-#define MAX_BULLETS 8
-#define GAMEPAD_COUNT 4
-#define KEYBOARD_INPUT 0xEC20
-#define GAMEPAD_INPUT 0xEC50
-#define KEYBOARD_BYTES 32
-
 extern gamepad_t gamepad[GAMEPAD_COUNT];
 extern uint8_t keystates[KEYBOARD_BYTES];
 
@@ -71,11 +66,7 @@ void show_level_up(void)
     const uint8_t white_color = 0xFF;
     const uint16_t center_x = 120;
     const uint16_t center_y = 80;
-    
-    // Button definitions
-    #define GP_BTN_START 0x08  // START button in BTN1
-    #define KEY_ENTER 0x28     // ENTER key
-    
+        
     // Draw "LEVEL UP" message
     draw_text(center_x, center_y, "LEVEL UP", blue_color);
     draw_text(center_x - 45, center_y + 15, "PRESS START TO CONTINUE", white_color);

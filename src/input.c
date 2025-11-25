@@ -1,4 +1,5 @@
 #include "input.h"
+#include "constants.h"
 #include "usb_hid_keys.h"
 #include <rp6502.h>
 #include <stdint.h>
