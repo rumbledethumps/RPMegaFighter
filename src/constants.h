@@ -35,7 +35,7 @@
 #define SBULLET_SPEED_SHIFT  6        // Divide by 64 for bullet speed (~4 pixels/frame)
 
 // Fighter properties
-#define MAX_FIGHTERS        30    // Maximum number of enemy fighters
+#define MAX_FIGHTERS        32    // Maximum number of enemy fighters
 #define FIGHTER_SPAWN_RATE  128   // Frames between fighter spawns
 #define INITIAL_FIGHTER_SPEED_MIN 16  // Initial minimum fighter speed
 #define INITIAL_FIGHTER_SPEED_MAX 256 // Initial maximum fighter speed

@@ -69,7 +69,7 @@ void show_level_up(void)
         
     // Draw "LEVEL UP" message
     draw_text(center_x, center_y, "LEVEL UP", blue_color);
-    draw_text(center_x - 45, center_y + 15, "PRESS START TO CONTINUE", white_color);
+    draw_text(center_x - 45, center_y + 15, "PRESS B TO CONTINUE", white_color);
     
     printf("\n*** LEVEL UP! Now on level %d ***\n", game_level);
     
@@ -103,14 +103,14 @@ void show_level_up(void)
             gamepad[i].l2 = RIA.rw0;
             gamepad[i].r2 = RIA.rw0;
         }
-        
-        // Check if START or ENTER is released
-        if (!(gamepad[0].btn1 & GP_BTN_START) && !key(KEY_ENTER)) {
+
+        // Check if B button or ENTER is released
+        if (!(gamepad[0].btn0 & GP_BTN_B) && !key(KEY_ENTER)) {
             break;
         }
     }
     
-    // Now wait for START or ENTER to be pressed
+    // Now wait for B button or ENTER to be pressed
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
@@ -137,17 +137,16 @@ void show_level_up(void)
             gamepad[i].l2 = RIA.rw0;
             gamepad[i].r2 = RIA.rw0;
         }
-        
-        // Check for START button or ENTER key
-        bool start_now = (gamepad[0].btn1 & GP_BTN_START) || key(KEY_ENTER);
+        // Check for B button or ENTER key
+        bool start_now = (gamepad[0].btn0 & GP_BTN_B) || key(KEY_ENTER);
         
         if (start_now && !start_pressed) {
-            break;  // START pressed, continue to next level
+            break;  // B pressed, continue to next level
         }
         start_pressed = start_now;
     }
-    
-    // Wait for START button to be released before exiting
+
+    // Wait for B button to be released before exiting
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
@@ -175,8 +174,8 @@ void show_level_up(void)
             gamepad[i].r2 = RIA.rw0;
         }
         
-        // Check if START and ENTER are both released
-        if (!(gamepad[0].btn1 & GP_BTN_START) && !key(KEY_ENTER)) {
+        // Check if B button and ENTER are both released
+        if (!(gamepad[0].btn0 & GP_BTN_B) && !key(KEY_ENTER)) {
             break;  // Button released, safe to exit
         }
     }
