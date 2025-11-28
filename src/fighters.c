@@ -208,15 +208,15 @@ void update_fighters(void)
         fighters[i].x += fvx_applied;
         fighters[i].y += fvy_applied;
 
-        if (fighters[i].dx > STARFIELD_X) {
+        if (fighters[i].x > STARFIELD_X) {
             fighters[i].x -= WORLD_X;
-        } else if (fighters[i].dx < -STARFIELD_X) {
+        } else if (fighters[i].x < -STARFIELD_X) {
             fighters[i].x += WORLD_X;
         }
 
-        if (fighters[i].dy > STARFIELD_Y) {
+        if (fighters[i].y > STARFIELD_Y) {
             fighters[i].y -= WORLD_Y;
-        } else if (fighters[i].dy < -STARFIELD_Y) {
+        } else if (fighters[i].y < -STARFIELD_Y) {
             fighters[i].y += WORLD_Y;
         }
 
