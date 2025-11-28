@@ -71,10 +71,10 @@
 
 // Controller input
 #define GAMEPAD_COUNT 4      // Support up to 4 gamepads
-#define GAMEPAD_INPUT 0xEC50 // XRAM address for gamepad data
+#define GAMEPAD_INPUT 0xE9D0 // XRAM address for gamepad data
 #define GAMEPAD_DATA_SIZE 10      // 10 bytes per gamepad
 
-#define KEYBOARD_INPUT  0xEC20  // XRAM address for keyboard data
+#define KEYBOARD_INPUT  0xE9F8  // XRAM address for keyboard data
 #define KEYBOARD_BYTES  32      // 32 bytes for 256 key states
 
 // Button definitions
@@ -128,5 +128,8 @@
 #define BLOCK1_ATTR 0x06 // cyan
 #define BLOCK2_ATTR 0x03 // yellow
 #define BLOCK_EMPTY_ATTR 0x08 // grey
+
+// Level text buffer length (chars)
+#define LEVEL_MESSAGE_LENGTH 10
 
 #endif // CONSTANTS_H

@@ -202,11 +202,11 @@ void run_demo(void)
         update_ebullets();
 
         // Update demo text color and text only every 20 frames
-        if ((frames % 20) == 0) {
-            uint8_t demo_color = demo_colors[(frames / 20) % num_demo_colors];
-            draw_text(SCREEN_WIDTH / 2 - 23, 10, "DEMO MODE", demo_color);
-            draw_text(SCREEN_WIDTH / 2 - 63, SCREEN_HEIGHT - 10, "PRESS ENTER, ESC, OR B TO EXIT", demo_color);
-        }
+        // if ((frames % 20) == 0) {
+        //     uint8_t demo_color = demo_colors[(frames / 20) % num_demo_colors];
+        //     draw_text(SCREEN_WIDTH / 2 - 23, 25, "DEMO MODE", demo_color);
+        //     draw_text(SCREEN_WIDTH / 2 - 63, SCREEN_HEIGHT - 15, "PRESS ENTER, ESC, OR B TO EXIT", demo_color);
+        // }
 
         // Render frame
         render_game();

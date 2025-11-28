@@ -4,6 +4,7 @@
 
 #include "input.h"
 #include "constants.h"
+#include <string.h>
 
 static int16_t dx = 0;   // scrolling of visible screen relative to World map
 static int16_t dy = 0;
@@ -11,15 +12,13 @@ static int16_t dy = 0;
 //Sprite locations
 #define SPACESHIP_DATA  0xE100  //Spaceship Sprite (8x8)
 #define EARTH_DATA      0xE180  //Earth Sprite (32x32)
-#define STATION_DATA    0xE980  //Enemy Station Sprite (16x16)
-#define BATTLE_DATA     0xEB80  //Enemy battle station Sprite (8x8)
-#define FIGHTER_DATA    0xEC00  //Enemy fighter Sprite (4x4)
-#define EBULLET_DATA    0xEC20  //Enemy bullet Sprite (2x2)
-#define BULLET_DATA     0xEC28  //Player bullet Sprite (2x2)
-#define SBULLET_DATA    0xEC30  //Super bullet Sprite (4x4)
+#define FIGHTER_DATA    0xE980  //Enemy fighter Sprite (4x4)
+#define EBULLET_DATA    0xE9A0  //Enemy bullet Sprite (2x2)
+#define BULLET_DATA     0xE9A8  //Player bullet Sprite (2x2)
+#define SBULLET_DATA    0xE9B0  //Super bullet Sprite (4x4)
 
 //XRAM Memory addresses
-#define VGA_CONFIG_START 0xECA0 //Start of graphic config addresses (after gamepad data)
+#define VGA_CONFIG_START 0xEA20 //Start of graphic config addresses (after gamepad data)
 unsigned BITMAP_CONFIG;         //Bitmap Config 
 unsigned SPACECRAFT_CONFIG;     //Spacecraft Sprite Config - Affine 
 unsigned EARTH_CONFIG;          //Earth Sprite Config - Standard 
@@ -44,9 +43,18 @@ uint8_t star_colour[32] = {0};
 unsigned text_message_addr;
 static char score_message[6] = "SCORE ";
 static char score_value[6] = "00000";
-#define MESSAGE_LENGTH 36
-static char message[MESSAGE_LENGTH];
+#define MESSAGE_WIDTH 36
+#define MESSAGE_HEIGHT 2
+#define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT)
+static char message[MESSAGE_LENGTH]; 
+
+static inline void definitions_init_message(void) {
+    memset(message, ' ', sizeof message);
+}
+
 static uint16_t score = 0;
+
+static char level_message[5] = "LEVEL";
 
 // (Block palette constants moved to constants.h)
 

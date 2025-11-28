@@ -17,17 +17,13 @@ add_executable(rpmegafighter)
 target_compile_options(rpmegafighter PRIVATE -Os)
 rp6502_asset(rpmegafighter 0x1E100 images/spaceship2.bin)
 rp6502_asset(rpmegafighter 0x1E180 images/Earth.bin)
-rp6502_asset(rpmegafighter 0x1E980 images/enemy1.bin)
-rp6502_asset(rpmegafighter 0x1EB80 images/npbattle.bin)
-rp6502_asset(rpmegafighter 0x1EC00 images/fighter.bin)
-rp6502_asset(rpmegafighter 0x1EC20 images/ebullet.bin)
-rp6502_asset(rpmegafighter 0x1EC28 images/bullet.bin)
-rp6502_asset(rpmegafighter 0x1EC30 images/sbullet.bin)
+rp6502_asset(rpmegafighter 0x1E980 images/fighter.bin)
+rp6502_asset(rpmegafighter 0x1E9A0 images/ebullet.bin)
+rp6502_asset(rpmegafighter 0x1E9A8 images/bullet.bin)
+rp6502_asset(rpmegafighter 0x1E9B0 images/sbullet.bin)
 rp6502_executable(rpmegafighter
     spaceship2.bin.rp6502
     Earth.bin.rp6502
-    enemy1.bin.rp6502
-    npbattle.bin.rp6502
     fighter.bin.rp6502
     ebullet.bin.rp6502
     bullet.bin.rp6502

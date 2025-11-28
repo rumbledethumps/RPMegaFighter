@@ -319,10 +319,10 @@ static void init_graphics(void)
 
         xram0_struct_set(ptr, vga_mode1_config_t, x_wrap, 0);
         xram0_struct_set(ptr, vga_mode1_config_t, y_wrap, 0);
-        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 1); //Bug: first char duplicated if not set to zero
+        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 7); //Bug: first char duplicated if not set to zero
         xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 1);
-        xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_LENGTH);
-        xram0_struct_set(ptr, vga_mode1_config_t, height_chars, 1);
+        xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_WIDTH);
+        xram0_struct_set(ptr, vga_mode1_config_t, height_chars, MESSAGE_HEIGHT);
         xram0_struct_set(ptr, vga_mode1_config_t, xram_data_ptr, text_message_addr);
         xram0_struct_set(ptr, vga_mode1_config_t, xram_palette_ptr, 0xFFFF);
         xram0_struct_set(ptr, vga_mode1_config_t, xram_font_ptr, 0xFFFF);
@@ -335,7 +335,7 @@ static void init_graphics(void)
     // [pad][player:3][sp][block1:8][sp][game:5][sp][block2:8][sp][enemy:3][pad]
     // Center the 31-char sequence in the MESSAGE_LENGTH (36) buffer.
     const int seq_len = 3 + 1 + 8 + 1 + 5 + 1 + 8 + 1 + 3; // 31
-    const int left_pad = (MESSAGE_LENGTH - seq_len) / 2; // integer division
+    const int left_pad = (MESSAGE_WIDTH - seq_len) / 2; // integer division
 
     // Clear message buffer to spaces
     for (int i = 0; i < MESSAGE_LENGTH; ++i) message[i] = ' ';
@@ -344,11 +344,13 @@ static void init_graphics(void)
     char player_buf[4] = "000"; // 3 chars + NUL
     char game_buf[6] = "00000";  // 5 chars + NUL
     char enemy_buf[4] = "000";
+    char level_buf[3] = "01";   // 2 char + NUL
 
     // Ensure scores are in range and format zero-padded
     snprintf(player_buf, sizeof(player_buf), "%03d", player_score >= 0 ? player_score : 0);
     snprintf(game_buf, sizeof(game_buf), "%05d", game_score >= 0 ? game_score : 0);
     snprintf(enemy_buf, sizeof(enemy_buf), "%03d", enemy_score >= 0 ? enemy_score : 0);
+    snprintf(level_buf, sizeof(level_buf), "%02d", game_level >= 1 ? game_level : 1);
 
     int idx = left_pad;
     // player 3 chars
@@ -372,10 +374,17 @@ static void init_graphics(void)
     // enemy 3 chars
     for (int k = 0; k < 3; ++k) message[idx++] = enemy_buf[k];
 
+    // Write Level Message
+    idx = (MESSAGE_HEIGHT - 1) * MESSAGE_WIDTH +  MESSAGE_WIDTH/2 - 4; // center "LEVEL XX"
+    for (int k = 0; k < 5; ++k) message[idx++] = level_message[k];
+    for (int k = 0; k < 2; ++k) message[idx++] = level_buf[k];
+
+    // printf("Full message: '%.*s'\n", MESSAGE_LENGTH, message);
+
     // Now write the MESSAGE_LENGTH characters into text RAM (3 bytes per char)
     RIA.addr0 = text_message_addr;
     RIA.step0 = 1;
-    for (uint8_t i = 0; i < sizeof(message); i++) {
+    for (uint8_t i = 0; i < MESSAGE_LENGTH; i++) {
         // block1 region
         if ((int)i >= block1_start && (int)i < block1_start + 8) {
             RIA.rw0 = 0xDB; // block glyph
@@ -395,7 +404,6 @@ static void init_graphics(void)
         }
     }
 
-    
     // Clear bitmap memory
     RIA.addr0 = 0;
     RIA.step0 = 1;

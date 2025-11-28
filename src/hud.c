@@ -166,16 +166,16 @@ void draw_hud(void)
         RIA.rw0 = 0x00;
     }
     
-    // Draw level indicator at bottom of screen
-    const uint16_t level_y = 170;
+    // // Draw level indicator at bottom of screen
+    // const uint16_t level_y = 170;
     
-    // Clear level area before drawing (wider to cover both text and number)
-    clear_rect(10, level_y, 50, 5);
+    // // Clear level area before drawing (wider to cover both text and number)
+    // clear_rect(10, level_y, 50, 5);
     
-    draw_text(10, level_y, "LEVEL", text_color);
-    char level_buf[3];
-    level_buf[0] = '0' + (game_level / 10) % 10;
-    level_buf[1] = '0' + game_level % 10;
-    level_buf[2] = '\0';
-    draw_text(50, level_y, level_buf, text_color);
+    // draw_text(10, level_y, "LEVEL", text_color);
+    // char level_buf[3];
+    // level_buf[0] = '0' + (game_level / 10) % 10;
+    // level_buf[1] = '0' + game_level % 10;
+    // level_buf[2] = '\0';
+    // draw_text(50, level_y, level_buf, text_color);
 }
