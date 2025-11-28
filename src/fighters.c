@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 // ============================================================================
 // CONSTANTS
@@ -121,9 +122,14 @@ void update_fighters(void)
 {
     int16_t fvx_applied, fvy_applied;
     
-    int16_t player_world_x = player_x + world_offset_x;
-    int16_t player_world_y = player_y + world_offset_y;
-    
+    int16_t player_world_x = player_x;
+    int16_t player_world_y = player_y;
+
+    // for (uint8_t i = 0; i < 1; i++) {
+    //     printf("Fighter %d position 1: x=%d, y=%d\n", i, fighters[i].x, fighters[i].y);
+    //     printf(fighters[i].status ? "active\n" : "inactive\n");
+    // }
+
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
         if (fighters[i].status <= 0) {
             fighters[i].status--;
@@ -135,20 +141,20 @@ void update_fighters(void)
                 
                 if (edge == 0) {
                     // Spawn on right edge
-                    fighters[i].x = world_offset_x + SCREEN_WIDTH + random(20, 100);
-                    fighters[i].y = world_offset_y + random(20, SCREEN_HEIGHT - 20);
+                    fighters[i].x = SCREEN_WIDTH + random(20, 100);
+                    fighters[i].y = random(20, SCREEN_HEIGHT - 20);
                 } else if (edge == 1) {
                     // Spawn on left edge
-                    fighters[i].x = world_offset_x - random(20, 100);
-                    fighters[i].y = world_offset_y + random(20, SCREEN_HEIGHT - 20);
+                    fighters[i].x = -random(20, 100);
+                    fighters[i].y = random(20, SCREEN_HEIGHT - 20);
                 } else if (edge == 2) {
                     // Spawn on top edge
-                    fighters[i].x = world_offset_x + random(20, SCREEN_WIDTH - 20);
-                    fighters[i].y = world_offset_y + SCREEN_HEIGHT + random(20, 100);
+                    fighters[i].x = random(20, SCREEN_WIDTH - 20);
+                    fighters[i].y = SCREEN_HEIGHT + random(20, 100);
                 } else {
                     // Spawn on bottom edge
-                    fighters[i].x = world_offset_x + random(20, SCREEN_WIDTH - 20);
-                    fighters[i].y = world_offset_y - random(20, 100);
+                    fighters[i].x = random(20, SCREEN_WIDTH - 20);
+                    fighters[i].y = -random(20, 100);
                 }
                 
                 fighters[i].status = 1;
@@ -156,12 +162,14 @@ void update_fighters(void)
             }
             continue;
         }
+
+
         
-        int16_t fighter_screen_x = fighters[i].x - world_offset_x;
-        int16_t fighter_screen_y = fighters[i].y - world_offset_y;
-        
-        if (fighter_screen_x + 4 > player_x && fighter_screen_x < player_x + 8 &&
-            fighter_screen_y + 4 > player_y && fighter_screen_y < player_y + 8) {
+        fighters[i].x -= world_offset_x;
+        fighters[i].y -= world_offset_y;
+
+        if (fighters[i].x + 4 > player_x && fighters[i].x < player_x + 8 &&
+            fighters[i].y + 4 > player_y && fighters[i].y < player_y + 8) {
             fighters[i].status = 0;
             active_fighter_count--;
             enemy_score += 2;
@@ -200,22 +208,25 @@ void update_fighters(void)
         
         fighters[i].x += fvx_applied;
         fighters[i].y += fvy_applied;
-        
-        int16_t fighter_offset_x = fighters[i].x - world_offset_x;
-        int16_t fighter_offset_y = fighters[i].y - world_offset_y;
-        
-        if (fighter_offset_x > SCREEN_WIDTH + 200) {
-            fighters[i].x = world_offset_x - 150;
-        } else if (fighter_offset_x < -200) {
-            fighters[i].x = world_offset_x + SCREEN_WIDTH + 150;
+
+        if (fighters[i].dx > STARFIELD_X) {
+            fighters[i].x -= WORLD_X;
+        } else if (fighters[i].dx < -STARFIELD_X) {
+            fighters[i].x += WORLD_X;
         }
-        
-        if (fighter_offset_y > SCREEN_HEIGHT + 200) {
-            fighters[i].y = world_offset_y - 150;
-        } else if (fighter_offset_y < -200) {
-            fighters[i].y = world_offset_y + SCREEN_HEIGHT + 150;
+
+        if (fighters[i].dy > STARFIELD_Y) {
+            fighters[i].y -= WORLD_Y;
+        } else if (fighters[i].dy < -STARFIELD_Y) {
+            fighters[i].y += WORLD_Y;
         }
+
     }
+
+    // for (uint8_t i = 0; i < 1; i++) {
+    //     printf("Fighter %d position 2: x=%d, y=%d\n", i, fighters[i].x, fighters[i].y);
+    //     printf(fighters[i].status ? "active\n" : "inactive\n");
+    // }
 }
 
 void fire_ebullet(void)
@@ -362,13 +373,13 @@ void render_fighters(void)
 {
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
         if (fighters[i].status > 0) {
-            int16_t screen_x = fighters[i].x - world_offset_x;
-            int16_t screen_y = fighters[i].y - world_offset_y;
+            // int16_t screen_x = fighters[i].x - world_offset_x;
+            // int16_t screen_y = fighters[i].y - world_offset_y;
             
             unsigned ptr = FIGHTER_CONFIG + i * sizeof(vga_mode4_sprite_t);
-            
-            xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, screen_x);
-            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, screen_y);
+
+            xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, fighters[i].x);
+            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, fighters[i].y);
         } else {
             unsigned ptr = FIGHTER_CONFIG + i * sizeof(vga_mode4_sprite_t);
             xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);

@@ -10,6 +10,7 @@
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h> // added for printf debugging
 
 // ============================================================================
 // TYPES
@@ -338,18 +339,22 @@ void update_player(bool demomode)
     if (new_x > BOUNDARY_X && new_x < (SCREEN_WIDTH - BOUNDARY_X)) {
         player_x = new_x;
         scroll_dx = 0;
+        world_offset_x = 0;
     } else {
         scroll_dx = new_x - player_x;
-        world_offset_x += scroll_dx;
+        world_offset_x = scroll_dx;
     }
     
     if (new_y > BOUNDARY_Y && new_y < (SCREEN_HEIGHT - BOUNDARY_Y)) {
         player_y = new_y;
         scroll_dy = 0;
+        world_offset_y = 0;
     } else {
         scroll_dy = new_y - player_y;
-        world_offset_y += scroll_dy;
+        world_offset_y = scroll_dy;
     }
+
+    // printf("Player position: x=%d, y=%d\n", player_x, player_y);
 }
 
 void update_player_sprite(void)
