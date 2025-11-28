@@ -7,7 +7,14 @@ find_package(llvm-mos-sdk REQUIRED)
 
 project(RPMegaFighter C CXX ASM)
 
+# Default to size-optimized build for embedded target unless user specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Minsizerel CACHE STRING "Choose the type of build" FORCE)
+endif()
+
 add_executable(rpmegafighter)
+ # Prefer size-optimized compilation for this embedded project
+ target_compile_options(rpmegafighter PRIVATE -Os)
 rp6502_asset(rpmegafighter 0x1E100 images/spaceship2.bin)
 rp6502_asset(rpmegafighter 0x1E180 images/Earth.bin)
 rp6502_asset(rpmegafighter 0x1E980 images/enemy1.bin)
@@ -34,6 +41,7 @@ target_sources(rpmegafighter PRIVATE
     src/highscore.c
     src/hud.c
     src/fighters.c
+    src/demo.c
     src/player.c
     src/bullets.c
     src/sbullets.c

@@ -17,8 +17,9 @@ void reset_player_position(void);
 
 /**
  * Update player movement, rotation, and physics
+ * @param demomode true when running demo (AI) mode, false for normal input-driven play
  */
-void update_player(void);
+void update_player(bool demomode);
 
 /**
  * Update player sprite position and rotation on screen

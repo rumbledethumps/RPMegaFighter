@@ -13,8 +13,8 @@
 #define SHIP_ROTATION_MAX 23   // Ship rotation constant (24 rotation steps, 0-23)
 
 #define SHIP_ROT_SPEED      3  // Frames per rotation step
-#define BOUNDARY_X          60 // Horizontal boundary for player movement
-#define BOUNDARY_Y          40 // Vertical boundary for player movement
+#define BOUNDARY_X          100 // Horizontal boundary for player movement
+#define BOUNDARY_Y          60 // Vertical boundary for player movement
 
 // Bullet properties
 #define MAX_BULLETS         8

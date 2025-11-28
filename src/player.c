@@ -6,6 +6,7 @@
 #include "sound.h"
 #include "input.h"
 #include "usb_hid_keys.h"
+#include "random.h"
 #include <rp6502.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -63,6 +64,14 @@ static int16_t player_thrust_y = 0;
 static int16_t player_thrust_delay = 0;
 static int16_t player_thrust_count = 0;
 
+// Demo-mode state (controls AI rotation holds/direction)
+static int8_t demo_rotate_dir = 0; // -1 = left, 0 = none, 1 = right
+static uint16_t demo_rotate_hold = 0; // frames remaining to hold current rotation
+
+// Demo-mode thrust state
+static bool demo_thrusting = false;
+static uint16_t demo_thrust_hold = 0;
+
 // Bullet cooldown
 static uint16_t bullet_cooldown = 0;
 
@@ -79,6 +88,16 @@ static inline void get_velocity_from_rotation(uint8_t rotation, int16_t* vx_out,
     rotation = rotation % SHIP_ROTATION_STEPS;
     *vx_out = -sin_fix[rotation];
     *vy_out = -cos_fix[rotation];
+}
+
+// Helper: compute minimal signed rotation difference in range (-steps/2, steps/2]
+static inline int rotation_diff(int cur, int tgt)
+{
+    int diff = tgt - cur;
+    int half = SHIP_ROTATION_STEPS / 2;
+    while (diff > half) diff -= SHIP_ROTATION_STEPS;
+    while (diff <= -half) diff += SHIP_ROTATION_STEPS;
+    return diff;
 }
 
 // ============================================================================
@@ -118,19 +137,84 @@ void reset_player_position(void)
     xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, y_pos_px, player_y);
 }
 
-void update_player(void)
+void update_player(bool demomode)
 {
+    (void)demomode; 
+    bool rotate_left = false;
+    bool rotate_right = false;
+    bool thrust = false;
+
     // Handle player rotation
     player_rotation_frame++;
     if (player_rotation_frame >= SHIP_ROT_SPEED) {
         player_rotation_frame = 0;
         
-        bool rotate_left = key(KEY_LEFT) || 
+        if (demomode) {
+            // Demo-mode AI: pick a direction and hold it for a few frames.
+            if (demo_rotate_hold == 0) {
+                // Decide rotation with bias toward steering to screen center.
+                // Compute vector from player to screen center.
+                int16_t cx = SCREEN_WIDTH_D2;
+                int16_t cy = SCREEN_HEIGHT_D2;
+                int32_t dx = (int32_t)cx - (int32_t)player_x;
+                int32_t dy = (int32_t)cy - (int32_t)player_y;
+
+                // Find best rotation index pointing toward center by maximizing dot(thrust_vector, center_vector)
+                int best_rot = 0;
+                int32_t best_dot = INT32_MIN;
+                for (int r = 0; r < SHIP_ROTATION_STEPS; r++) {
+                    int32_t tvx = - (int32_t)sin_fix[r];
+                    int32_t tvy = - (int32_t)cos_fix[r];
+                    int32_t dot = tvx * dx + tvy * dy;
+                    if (dot > best_dot) {
+                        best_dot = dot;
+                        best_rot = r;
+                    }
+                }
+
+                int diff = rotation_diff(player_rotation, best_rot);
+
+                // If error is large, force a steer toward the center to correct quickly.
+                int absdiff = diff < 0 ? -diff : diff;
+                if (absdiff > 2) {
+                    demo_rotate_dir = (diff < 0) ? -1 : 1;
+                    // Shorter hold to allow finer corrections
+                    demo_rotate_hold = random(6, 18);
+                } else {
+                    // Otherwise bias strongly toward steering to center, but allow
+                    // occasional pauses to reduce mechanical motion.
+                    // Lower the no-rotation chance (more likely to steer).
+                    uint16_t rprob = random(0, 99);
+                    if (rprob < 30) {
+                        demo_rotate_dir = 0;
+                    } else {
+                        // Very high chance to steer toward center when choosing to rotate
+                        uint16_t r2 = random(0, 99);
+                        if (r2 < 95) {
+                            if (diff < 0) demo_rotate_dir = -1; else if (diff > 0) demo_rotate_dir = 1; else demo_rotate_dir = 0;
+                        } else {
+                            // fallback small chance to pick a random direction for variation
+                            demo_rotate_dir = (random(0, 1) == 0) ? -1 : 1;
+                        }
+                    }
+
+                    // Hold between 6 and 40 frames
+                    demo_rotate_hold = random(6, 40);
+                }
+            } else {
+                demo_rotate_hold--;
+            }
+
+            rotate_left = (demo_rotate_dir == -1);
+            rotate_right = (demo_rotate_dir == 1);
+        } else {
+            rotate_left = key(KEY_LEFT) || 
                           (gamepad[0].sticks & GP_LSTICK_LEFT) ||
                           (gamepad[0].dpad & GP_DPAD_LEFT);
-        bool rotate_right = key(KEY_RIGHT) || 
+            rotate_right = key(KEY_RIGHT) || 
                            (gamepad[0].sticks & GP_LSTICK_RIGHT) ||
                            (gamepad[0].dpad & GP_DPAD_RIGHT);
+        }
         
         if (rotate_left) {
             player_rotation++;
@@ -147,9 +231,49 @@ void update_player(void)
     }
     
     // Handle thrust/acceleration
-    bool thrust = key(KEY_UP) || 
+    if (demomode) {
+        // Demo-mode AI for thrust: bias toward thrusting, but throttle
+        // when the ship is facing away from the screen center.
+        if (demo_thrust_hold == 0) {
+            // Compute vector to screen center
+            int16_t cx = SCREEN_WIDTH_D2;
+            int16_t cy = SCREEN_HEIGHT_D2;
+            int32_t dx = (int32_t)cx - (int32_t)player_x;
+            int32_t dy = (int32_t)cy - (int32_t)player_y;
+
+            // Current facing thrust vector
+            int32_t tvx = - (int32_t)sin_fix[player_rotation];
+            int32_t tvy = - (int32_t)cos_fix[player_rotation];
+
+            // Dot product: positive means facing toward center
+            int64_t dot = (int64_t)tvx * dx + (int64_t)tvy * dy;
+
+            // Base thrust probability
+            uint16_t base_prob = 80; // percent
+
+            // If facing away from center, reduce probability and shorten holds
+            if (dot <= 0) {
+                base_prob = 25; // much less likely to thrust when facing away
+            }
+
+            uint16_t r = random(0, 99);
+            demo_thrusting = (r < base_prob);
+
+            // Hold length biased longer when thrusting toward center
+            if (demo_thrusting) {
+                demo_thrust_hold = random(20, 80);
+            } else {
+                demo_thrust_hold = random(6, 30);
+            }
+        } else {
+            demo_thrust_hold--;
+        }
+        thrust = demo_thrusting;
+    } else {
+        thrust = key(KEY_UP) || 
                  (gamepad[0].sticks & GP_LSTICK_UP) ||
                  (gamepad[0].dpad & GP_DPAD_UP);
+    }
     // bool reverse_thrust = key(KEY_DOWN) || (gamepad[0].sticks & GP_LSTICK_DOWN) || (gamepad[0].dpad & GP_DPAD_DOWN);  // Disabled for game balance
     
     if (thrust) {

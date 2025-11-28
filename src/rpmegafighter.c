@@ -389,7 +389,7 @@ static void init_game(void)
 /**
  * Render all game entities
  */
-static void render_game(void)
+void render_game(void)
 {
     // Draw scrolling star background
     draw_stars(scroll_dx, scroll_dy);
@@ -502,110 +502,110 @@ int main(void)
                 continue;
             vsync_last = RIA.vsync;
         
-        // Read input
-        handle_input();
-        
-        // Check for ESC key to exit
-        if (key(KEY_ESC)) {
-            printf("Exiting game...\n");
-            stop_music();
-            break;
-        }
-        
-        // Handle pause state and music
-        static bool was_paused = false;
-        bool currently_paused = is_game_paused();
-        
-        if (currently_paused && !was_paused) {
-            // Just paused - stop music
-            stop_music();
-        } else if (!currently_paused && was_paused) {
-            // Just resumed - restart music
-            start_gameplay_music();
-        }
-        was_paused = currently_paused;
-        
-        // Skip updates if paused
-        if (currently_paused) {
-            // Check for A+Y buttons pressed together to exit
-            if (check_pause_exit()) {
-                printf("\nA+Y pressed - Exiting game...\n");
+            // Read input
+            handle_input();
+            
+            // Check for ESC key to exit
+            if (key(KEY_ESC)) {
+                printf("Exiting game...\n");
                 stop_music();
                 break;
             }
-            continue;
-        }
-        
-        // Update music
-        update_music();
-        
-        // Update cooldown timers
-        decrement_bullet_cooldown();
-        decrement_ebullet_cooldown();
-        
-        // Enemy bullet system
-        fire_ebullet();
-        
-        // Handle player fire buttons
-        // Regular bullets: keyboard SPACE or gamepad A button (0x01)
-        if (key(KEY_SPACE) || (gamepad[0].btn0 & GP_BTN_A)) {
-            fire_bullet();
-        }
-        
-        // Super bullets: keyboard Left Shift or gamepad X button (0x08)
-        if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_X)) {
-            fire_sbullet(get_player_rotation());
-        }
-        
+            
+            // Handle pause state and music
+            static bool was_paused = false;
+            bool currently_paused = is_game_paused();
+            
+            if (currently_paused && !was_paused) {
+                // Just paused - stop music
+                stop_music();
+            } else if (!currently_paused && was_paused) {
+                // Just resumed - restart music
+                start_gameplay_music();
+            }
+            was_paused = currently_paused;
+            
+            // Skip updates if paused
+            if (currently_paused) {
+                // Check for A+Y buttons pressed together to exit
+                if (check_pause_exit()) {
+                    printf("\nA+Y pressed - Exiting game...\n");
+                    stop_music();
+                    break;
+                }
+                continue;
+            }
+            
+            // Update music
+            update_music();
+            
+            // Update cooldown timers
+            decrement_bullet_cooldown();
+            decrement_ebullet_cooldown();
+            
+            // Enemy bullet system
+            fire_ebullet();
+            
+            // Handle player fire buttons
+            // Regular bullets: keyboard SPACE or gamepad A button (0x01)
+            if (key(KEY_SPACE) || (gamepad[0].btn0 & GP_BTN_A)) {
+                fire_bullet();
+            }
+            
+            // Super bullets: keyboard Left Shift or gamepad X button (0x08)
+            if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_X)) {
+                fire_sbullet(get_player_rotation());
+            }
+            
             // Update game logic
-            update_player();
+            update_player(false);
             update_fighters();
             update_bullets();
             update_sbullets();
             update_ebullets();
-        
-        // Render frame
-        render_game();
-        draw_hud();
-        
-        // Increment frame counter
-        game_frame++;
-        if (game_frame >= 60) {
-            game_frame = 0;
-        }
-        
-        // Check win/lose conditions
-        if (player_score >= SCORE_TO_WIN) {
-            // Player wins this round - level up!
-            game_level++;
             
-            // Increase difficulty by reducing enemy bullet cooldown
-            increase_fighter_difficulty();
-            
-            // Speed up the music
-            increase_music_tempo();
-            
-            // Show level up screen
-            show_level_up();
-            
-            // Reset scores for next level
-            player_score = 0;
-            enemy_score = 0;
-            
-            // Redraw HUD with reset scores
+            // Render frame
+            render_game();
             draw_hud();
-        }
-        
-        if (enemy_score >= SCORE_TO_WIN) {
-            // Enemy wins - game over
-            stop_music();  // Stop gameplay music
-            reset_music_tempo();  // Reset tempo for next game
-            show_game_over();
             
-            // Set flag to exit gameplay loop and return to title screen
-            game_over = true;
+            // Increment frame counter
+            game_frame++;
+            if (game_frame >= 60) {
+                game_frame = 0;
+            }
+            
+            // Check win/lose conditions
+            if (player_score >= SCORE_TO_WIN) {
+                // Player wins this round - level up!
+                game_level++;
+                
+                // Increase difficulty by reducing enemy bullet cooldown
+                increase_fighter_difficulty();
+                
+                // Speed up the music
+                increase_music_tempo();
+                
+                // Show level up screen
+                show_level_up();
+                
+                // Reset scores for next level
+                player_score = 0;
+                enemy_score = 0;
+                
+                // Redraw HUD with reset scores
+                draw_hud();
+            }
+            
+            if (enemy_score >= SCORE_TO_WIN) {
+                // Enemy wins - game over
+                stop_music();  // Stop gameplay music
+                reset_music_tempo();  // Reset tempo for next game
+                show_game_over();
+                
+                // Set flag to exit gameplay loop and return to title screen
+                game_over = true;
+            }
         }
-    }
     // Gameplay loop ended - will return to title screen
     }
     
