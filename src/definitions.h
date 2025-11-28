@@ -41,12 +41,14 @@ uint8_t star_colour[32] = {0};
 
 // Text configs
 #define NTEXT 1
-int16_t text_message_addr;
+unsigned text_message_addr;
 static char score_message[6] = "SCORE ";
 static char score_value[6] = "00000";
 #define MESSAGE_LENGTH 36
 static char message[MESSAGE_LENGTH];
 static uint16_t score = 0;
+
+// (Block palette constants moved to constants.h)
 
 const uint16_t vlen = 57600; // Extended Memory space for bitmap graphics (320x180 @ 8-bits)
 

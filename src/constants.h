@@ -123,4 +123,10 @@
 // PSG memory location (must match sound.c)
 #define PSG_XRAM_ADDR 0xFF00
 
+// Text block palette/attribute constants
+// ANSI palette indices: 6 = cyan, 3 = yellow, 8 = gray
+#define BLOCK1_ATTR 0x06 // cyan
+#define BLOCK2_ATTR 0x03 // yellow
+#define BLOCK_EMPTY_ATTR 0x08 // grey
+
 #endif // CONSTANTS_H

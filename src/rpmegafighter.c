@@ -289,6 +289,112 @@ static void init_graphics(void)
     xregn(1, 0, 1, 5, 4, 1, SPACECRAFT_CONFIG, 1, 2);
     // Finally enable regular sprites (fighters + ebullets + bullets + sbullets) - all regular sprites in one call
     xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS + MAX_SBULLETS, 1);
+
+    // Enable text mode for on-screen messages
+
+    TEXT_CONFIG = SBULLET_CONFIG + MAX_SBULLETS * sizeof(vga_mode4_sprite_t); //Config address for text mode
+    // Place text message data immediately after text config entries
+    text_message_addr = TEXT_CONFIG + NTEXT * sizeof(vga_mode1_config_t); //address to store text message
+    // Calculate and print end of text storage (MESSAGE_LENGTH * bytes_per_char)
+    const unsigned bytes_per_char = 3; // we write 3 bytes per character into text RAM
+    unsigned text_storage_end = text_message_addr + MESSAGE_LENGTH * bytes_per_char;
+    printf("  text_storage_end=0x%X\n", text_storage_end);
+
+    // Debug: print config addresses and sizes to help diagnose overlaps
+    printf("Config addresses:\n");
+    printf("  BITMAP_CONFIG=0x%X\n", BITMAP_CONFIG);
+    printf("  EARTH_CONFIG=0x%X\n", EARTH_CONFIG);
+    printf("  SPACECRAFT_CONFIG=0x%X\n", SPACECRAFT_CONFIG);
+    printf("  FIGHTER_CONFIG=0x%X\n", FIGHTER_CONFIG);
+    printf("  EBULLET_CONFIG=0x%X\n", EBULLET_CONFIG);
+    printf("  BULLET_CONFIG=0x%X\n", BULLET_CONFIG);
+    printf("  SBULLET_CONFIG=0x%X\n", SBULLET_CONFIG);
+    printf("  TEXT_CONFIG=0x%X\n", TEXT_CONFIG);
+    printf("  text_message_addr=0x%X\n", text_message_addr);
+    printf("Struct sizes: vga_mode4_sprite_t=%u, vga_mode1_config_t=%u\n", (unsigned)sizeof(vga_mode4_sprite_t), (unsigned)sizeof(vga_mode1_config_t));
+
+    for (uint8_t i = 0; i < NTEXT; i++) {
+
+        unsigned ptr = TEXT_CONFIG + i * sizeof(vga_mode1_config_t);
+
+        xram0_struct_set(ptr, vga_mode1_config_t, x_wrap, 0);
+        xram0_struct_set(ptr, vga_mode1_config_t, y_wrap, 0);
+        xram0_struct_set(ptr, vga_mode1_config_t, x_pos_px, 1); //Bug: first char duplicated if not set to zero
+        xram0_struct_set(ptr, vga_mode1_config_t, y_pos_px, 1);
+        xram0_struct_set(ptr, vga_mode1_config_t, width_chars, MESSAGE_LENGTH);
+        xram0_struct_set(ptr, vga_mode1_config_t, height_chars, 1);
+        xram0_struct_set(ptr, vga_mode1_config_t, xram_data_ptr, text_message_addr);
+        xram0_struct_set(ptr, vga_mode1_config_t, xram_palette_ptr, 0xFFFF);
+        xram0_struct_set(ptr, vga_mode1_config_t, xram_font_ptr, 0xFFFF);
+    }
+
+    // 4 parameters: text mode, 8-bit, config, plane
+    xregn(1, 0, 1, 4, 1, 3, TEXT_CONFIG, 2);
+
+    // Build composed message layout:
+    // [pad][player:3][sp][block1:8][sp][game:5][sp][block2:8][sp][enemy:3][pad]
+    // Center the 31-char sequence in the MESSAGE_LENGTH (36) buffer.
+    const int seq_len = 3 + 1 + 8 + 1 + 5 + 1 + 8 + 1 + 3; // 31
+    const int left_pad = (MESSAGE_LENGTH - seq_len) / 2; // integer division
+
+    // Clear message buffer to spaces
+    for (int i = 0; i < MESSAGE_LENGTH; ++i) message[i] = ' ';
+
+    // Format scores into small temp buffers
+    char player_buf[4] = "000"; // 3 chars + NUL
+    char game_buf[6] = "00000";  // 5 chars + NUL
+    char enemy_buf[4] = "000";
+
+    // Ensure scores are in range and format zero-padded
+    snprintf(player_buf, sizeof(player_buf), "%03d", player_score >= 0 ? player_score : 0);
+    snprintf(game_buf, sizeof(game_buf), "%05d", game_score >= 0 ? game_score : 0);
+    snprintf(enemy_buf, sizeof(enemy_buf), "%03d", enemy_score >= 0 ? enemy_score : 0);
+
+    int idx = left_pad;
+    // player 3 chars
+    for (int k = 0; k < 3; ++k) message[idx++] = player_buf[k];
+    // space after player
+    message[idx++] = ' ';
+    // block1 8 chars (placeholder: will be rendered as block glyphs)
+    int block1_start = idx;
+    idx += 8;
+    // space before game
+    message[idx++] = ' ';
+    // game score 5 chars (surrounded by spaces)
+    for (int k = 0; k < 5; ++k) message[idx++] = game_buf[k];
+    // space after game
+    message[idx++] = ' ';
+    // block2 8 chars
+    int block2_start = idx;
+    idx += 8;
+    // space before enemy
+    message[idx++] = ' ';
+    // enemy 3 chars
+    for (int k = 0; k < 3; ++k) message[idx++] = enemy_buf[k];
+
+    // Now write the MESSAGE_LENGTH characters into text RAM (3 bytes per char)
+    RIA.addr0 = text_message_addr;
+    RIA.step0 = 1;
+    for (uint8_t i = 0; i < sizeof(message); i++) {
+        // block1 region
+        if ((int)i >= block1_start && (int)i < block1_start + 8) {
+            RIA.rw0 = 0xDB; // block glyph
+            RIA.rw0 = BLOCK1_ATTR; // palette/attr for first block
+            RIA.rw0 = 0x10; // extra byte
+        }
+        // block2 region
+        else if ((int)i >= block2_start && (int)i < block2_start + 8) {
+            RIA.rw0 = 0xDB; // block glyph
+            RIA.rw0 = BLOCK2_ATTR; // palette/attr for second block (yellow)
+            RIA.rw0 = 0x10;
+        }
+        else {
+            RIA.rw0 = message[i];
+            RIA.rw0 = 0xE0;
+            RIA.rw0 = 0x00;
+        }
+    }
+
     
     // Clear bitmap memory
     RIA.addr0 = 0;

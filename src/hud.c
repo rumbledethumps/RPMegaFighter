@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// Access to text RAM pointer defined in main module
+extern unsigned text_message_addr;
+
 // External dependencies from main game
 extern int16_t player_score;
 extern int16_t enemy_score;
@@ -30,51 +33,7 @@ static inline void set(int16_t x, int16_t y, uint8_t color)
     }
 }
 
-/**
- * Draw a horizontal bar (health/score meter) - fills left to right
- */
-static void draw_bar(int16_t x, int16_t y, int16_t width, int16_t value, int16_t max_value, uint8_t fill_color, uint8_t bg_color)
-{
-    int16_t filled_width = (value * width) / max_value;
-    if (filled_width > width) filled_width = width;
-    
-    // Draw filled portion
-    for (int16_t i = 0; i < filled_width; i++) {
-        for (int16_t j = 0; j < 5; j++) {
-            set(x + i, y + j, fill_color);
-        }
-    }
-    
-    // Draw empty portion
-    for (int16_t i = filled_width; i < width; i++) {
-        for (int16_t j = 0; j < 5; j++) {
-            set(x + i, y + j, bg_color);
-        }
-    }
-}
-
-/**
- * Draw a horizontal bar (health/score meter) - fills right to left
- */
-static void draw_bar_rtl(int16_t x, int16_t y, int16_t width, int16_t value, int16_t max_value, uint8_t fill_color, uint8_t bg_color)
-{
-    int16_t filled_width = (value * width) / max_value;
-    if (filled_width > width) filled_width = width;
-    
-    // Draw empty portion (on the left)
-    for (int16_t i = 0; i < width - filled_width; i++) {
-        for (int16_t j = 0; j < 5; j++) {
-            set(x + i, y + j, bg_color);
-        }
-    }
-    
-    // Draw filled portion (on the right)
-    for (int16_t i = width - filled_width; i < width; i++) {
-        for (int16_t j = 0; j < 5; j++) {
-            set(x + i, y + j, fill_color);
-        }
-    }
-}
+// Old pixel-based bar drawing functions removed — HUD now uses text-plane block bars.
 
 /**
  * Draw the HUD (score, health, etc.)
@@ -116,20 +75,47 @@ void draw_hud(void)
         first_draw = false;
     }
     
-    // Clear and draw player score (3 digits)
-    clear_rect(30, hud_y, 12, 5);
+    // Update player score (3 digits) directly in text RAM
     char score_buf[4];
     score_buf[0] = '0' + (player_score / 100) % 10;
     score_buf[1] = '0' + (player_score / 10) % 10;
     score_buf[2] = '0' + player_score % 10;
     score_buf[3] = '\0';
-    draw_text(30, hud_y, score_buf, text_color);
+
+    // Message layout matches main text: left_pad places player score at start
+    const int MESSAGE_LENGTH_LOCAL = 36;
+    const int seq_len = 3 + 1 + 8 + 1 + 5 + 1 + 8 + 1 + 3; // 31
+    const int left_pad = (MESSAGE_LENGTH_LOCAL - seq_len) / 2; // 2
+    const int player_index = left_pad; // player score begins here
+
+    // Each character in text RAM is 3 bytes (char, palette/attr, extra)
+    unsigned addr = text_message_addr + player_index * 3;
+    RIA.addr0 = addr;
+    RIA.step0 = 1;
+
+    for (uint8_t k = 0; k < 3; ++k) {
+        RIA.rw0 = score_buf[k];
+        RIA.rw0 = 0xE0; // normal text attribute
+        RIA.rw0 = 0x00; // extra/unused
+    }
     
-    // Draw BAR1 (player progress bar) - longer bar (60 pixels)
-    draw_bar(55, hud_y, 80, player_score, SCORE_TO_WIN, player_bar_color, bar_bg_color);
+    // Draw BAR1 as text-plane blocks (8 chars). Grey when 0, fill with color to 100.
+    const int block_chars = 8;
+    const int block1_start = player_index + 3 + 1; // after player(3) + space
+    int filled1 = (player_score * block_chars) / SCORE_TO_WIN;
+    if (filled1 < 0) filled1 = 0;
+    if (filled1 > block_chars) filled1 = block_chars;
+
+    unsigned b1_addr = text_message_addr + block1_start * 3;
+    RIA.addr0 = b1_addr;
+    RIA.step0 = 1;
+    for (int i = 0; i < block_chars; ++i) {
+        RIA.rw0 = 0xDB; // block glyph
+        if (i < filled1) RIA.rw0 = BLOCK1_ATTR; else RIA.rw0 = BLOCK_EMPTY_ATTR;
+        RIA.rw0 = 0x10;
+    }
     
-    // Clear and draw game score (5 digits)
-    clear_rect(145, hud_y, 20, 5);
+    // Update game score (5 digits) directly in text RAM
     char game_score_buf[6];
     game_score_buf[0] = '0' + (game_score / 10000) % 10;
     game_score_buf[1] = '0' + (game_score / 1000) % 10;
@@ -137,17 +123,48 @@ void draw_hud(void)
     game_score_buf[3] = '0' + (game_score / 10) % 10;
     game_score_buf[4] = '0' + game_score % 10;
     game_score_buf[5] = '\0';
-    draw_text(145, hud_y, game_score_buf, text_color);
+
+    const int game_index = player_index + 3 + 1 + 8 + 1; // left_pad + 13
+
+    unsigned game_addr = text_message_addr + game_index * 3;
+    RIA.addr0 = game_addr;
+    RIA.step0 = 1;
+    for (uint8_t k = 0; k < 5; ++k) {
+        RIA.rw0 = game_score_buf[k];
+        RIA.rw0 = 0xE0;
+        RIA.rw0 = 0x00;
+    }
     
-    // Draw BAR2 (enemy progress bar) - fills right to left
-    draw_bar_rtl(175, hud_y, 80, enemy_score, SCORE_TO_WIN, enemy_bar_color, bar_bg_color);
+    // Draw BAR2 as text-plane blocks (8 chars), filled right-to-left.
+    const int block2_start = player_index + 3 + 1 + 8 + 1 + 5 + 1; // after player, space, block1, space, game, space
+    int filled2 = (enemy_score * block_chars) / SCORE_TO_WIN;
+    if (filled2 < 0) filled2 = 0;
+    if (filled2 > block_chars) filled2 = block_chars;
+
+    unsigned b2_addr = text_message_addr + block2_start * 3;
+    RIA.addr0 = b2_addr;
+    RIA.step0 = 1;
+    for (int i = 0; i < block_chars; ++i) {
+        RIA.rw0 = 0xDB; // block glyph
+        // fill from right: positions >= (block_chars - filled2) are filled
+        if (i >= (block_chars - filled2)) RIA.rw0 = BLOCK2_ATTR; else RIA.rw0 = BLOCK_EMPTY_ATTR;
+        RIA.rw0 = 0x10;
+    }
     
-    // Clear and draw enemy score (3 digits)
-    clear_rect(270, hud_y, 12, 5);
+    // Update enemy score (3 digits) directly in text RAM
     score_buf[0] = '0' + (enemy_score / 100) % 10;
     score_buf[1] = '0' + (enemy_score / 10) % 10;
     score_buf[2] = '0' + enemy_score % 10;
-    draw_text(270, hud_y, score_buf, text_color);
+
+    const int enemy_index = game_index + 5 + 1 + 8 + 1; // game_index + 15 -> left_pad + 28? (results in 30)
+    unsigned enemy_addr = text_message_addr + enemy_index * 3;
+    RIA.addr0 = enemy_addr;
+    RIA.step0 = 1;
+    for (uint8_t k = 0; k < 3; ++k) {
+        RIA.rw0 = score_buf[k];
+        RIA.rw0 = 0xE0;
+        RIA.rw0 = 0x00;
+    }
     
     // Draw level indicator at bottom of screen
     const uint16_t level_y = 170;
