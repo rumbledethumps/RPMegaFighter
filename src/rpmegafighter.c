@@ -438,6 +438,10 @@ static void init_game(void)
     init_sbullets();
     init_fighters();
     init_stars();
+
+    // Reset Earth position
+    earth_x = SCREEN_WIDTH / 2;
+    earth_y = SCREEN_HEIGHT / 2;
     
     printf("Game initialized\n");
 }
