@@ -569,6 +569,9 @@ void render_game(void)
 // MAIN GAME LOOP
 // ============================================================================
 
+bool demo_mode_active = false;
+uint16_t demo_frames = 0;
+
 int main(void)
 {
     printf("\n=== RPMegaFighter ===\n");
@@ -599,7 +602,12 @@ int main(void)
     while (true) {
         // Show title screen and wait for START
         show_title_screen();
-        
+
+        // Reset demo mode counter
+        if (demo_mode_active) {
+            demo_frames = 0;
+        }
+
         // Initialize/reset game state
         init_game();
         
@@ -617,7 +625,10 @@ int main(void)
             vsync_last = RIA.vsync;
         
             // Read input
-            handle_input();
+            if (!demo_mode_active) {
+                handle_input();
+            }
+            
             
             // Check for ESC key to exit
             if (key(KEY_ESC)) {
@@ -662,17 +673,17 @@ int main(void)
             
             // Handle player fire buttons
             // Regular bullets: keyboard SPACE or gamepad A button (0x01)
-            if (key(KEY_SPACE) || (gamepad[0].btn0 & GP_BTN_A)) {
+            if (key(KEY_SPACE) || (gamepad[0].btn0 & GP_BTN_A) || (demo_mode_active)) {
                 fire_bullet();
             }
             
             // Super bullets: keyboard Left Shift or gamepad X button (0x08)
-            if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_X)) {
+            if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_X) || (demo_mode_active)) {
                 fire_sbullet(get_player_rotation());
             }
             
             // Update game logic
-            update_player(false);
+            update_player(demo_mode_active);
             update_fighters();
             update_bullets();
             update_sbullets();
@@ -687,9 +698,20 @@ int main(void)
             if (game_frame >= 60) {
                 game_frame = 0;
             }
+
+            // Increment demo mode frame counter
+            if (demo_mode_active) {
+                demo_frames++;
+                if (demo_frames >= DEMO_DURATION_FRAMES) {
+                    // Exit demo mode after set frames
+                    demo_mode_active = false;
+                    game_over = true;
+                    printf("Exiting demo mode after %d frames\n", DEMO_DURATION_FRAMES);
+                }
+            }
             
             // Check win/lose conditions
-            if (player_score >= SCORE_TO_WIN) {
+            if (player_score >= SCORE_TO_WIN && !demo_mode_active) {
                 // Player wins this round - level up!
                 game_level++;
                 
@@ -710,7 +732,7 @@ int main(void)
                 draw_hud();
             }
             
-            if (enemy_score >= SCORE_TO_WIN) {
+            if (enemy_score >= SCORE_TO_WIN && !demo_mode_active) {
                 // Enemy wins - game over
                 stop_music();  // Stop gameplay music
                 reset_music_tempo();  // Reset tempo for next game

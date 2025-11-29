@@ -11,13 +11,14 @@
 
 #include "graphics.h"
 #include "usb_hid_keys.h"
-#include "demo.h"
+// #include "demo.h"
 
 // External references
 extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
 extern void clear_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 extern void draw_high_scores(void);
 extern const uint16_t vlen;
+extern bool demo_mode_active;
 
 // Gamepad structure and constants
 typedef struct {
@@ -191,17 +192,26 @@ void show_title_screen(void)
         // Demo countdown: always increment and start demo after timeout
         idle_frames++;
         if (idle_frames >= DEMO_IDLE_FRAMES) {
-            run_demo();
+            // run_demo();
             // After demo returns, redraw title elements and reset idle counter
-            start_title_music();
-            draw_text(center_x, 40, "MEGA", red_color);
-            draw_text(center_x, 55, "SUPER", red_color);
-            draw_text(center_x, 70, "FIGHTER", red_color);
-            draw_text(center_x, 85, "CHALLENGE", blue_color);
-            draw_high_scores();
-            draw_text(center_x - 20, 110, "PRESS START", red_color);
-            draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
-            idle_frames = 0;
+            // start_title_music();
+            // draw_text(center_x, 40, "MEGA", red_color);
+            // draw_text(center_x, 55, "SUPER", red_color);
+            // draw_text(center_x, 70, "FIGHTER", red_color);
+            // draw_text(center_x, 85, "CHALLENGE", blue_color);
+            // draw_high_scores();
+            // draw_text(center_x - 20, 110, "PRESS START", red_color);
+            // draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
+            demo_mode_active = true;
+
+            // Clear entire screen before exiting
+            RIA.addr0 = 0;
+            RIA.step0 = 1;
+            for (unsigned i = vlen; i--;) {
+                RIA.rw0 = 0;
+            }
+
+            return;  // Exit title screen to start demo mode
         }
 
         // Check for A+Y buttons pressed together to exit

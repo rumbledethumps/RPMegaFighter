@@ -68,12 +68,12 @@ void draw_hud(void)
     // Format with longer bars for better spacing
     
     // Draw static text (only on first draw)
-    static bool first_draw = true;
-    if (first_draw) {
-        draw_text(5, hud_y, "YOU", text_color);
-        draw_text(290, hud_y, "THEM", text_color);
-        first_draw = false;
-    }
+    // static bool first_draw = true;
+    // if (first_draw) {
+    //     draw_text(5, hud_y, "YOU", text_color);
+    //     draw_text(290, hud_y, "THEM", text_color);
+    //     first_draw = false;
+    // }
     
     // Update player score (3 digits) directly in text RAM
     char score_buf[4];

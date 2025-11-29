@@ -37,7 +37,6 @@ target_sources(rpmegafighter PRIVATE
     src/highscore.c
     src/hud.c
     src/fighters.c
-    src/demo.c
     src/player.c
     src/bullets.c
     src/sbullets.c

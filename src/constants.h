@@ -119,7 +119,6 @@
 #define GP_BTN_L3         0x20  // bit 5: L3
 #define GP_BTN_R3         0x40  // bit 6: R3
 
-
 // PSG memory location (must match sound.c)
 #define PSG_XRAM_ADDR 0xFF00
 
@@ -131,5 +130,8 @@
 
 // Level text buffer length (chars)
 #define LEVEL_MESSAGE_LENGTH 10
+
+// Demo configuration
+#define DEMO_DURATION_FRAMES (60 * 40) // 40 seconds
 
 #endif // CONSTANTS_H
