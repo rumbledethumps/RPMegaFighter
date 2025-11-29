@@ -86,11 +86,19 @@ void show_title_screen(void)
     
     // Title screen loop - wait for START button
     bool start_button_was_pressed = false;  // Track button state for edge detection
+    uint16_t highscore_counter = 0;
     while (true) {
         // Wait for vertical sync
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
+
+        // Update high score display periodically to rotate colours
+        highscore_counter++;
+        if (highscore_counter >= 15) {
+            highscore_counter = 0;
+            draw_high_scores();
+        }
         
         // Update music
         update_music();
@@ -192,17 +200,8 @@ void show_title_screen(void)
         // Demo countdown: always increment and start demo after timeout
         idle_frames++;
         if (idle_frames >= DEMO_IDLE_FRAMES) {
-            // run_demo();
-            // After demo returns, redraw title elements and reset idle counter
-            // start_title_music();
-            // draw_text(center_x, 40, "MEGA", red_color);
-            // draw_text(center_x, 55, "SUPER", red_color);
-            // draw_text(center_x, 70, "FIGHTER", red_color);
-            // draw_text(center_x, 85, "CHALLENGE", blue_color);
-            // draw_high_scores();
-            // draw_text(center_x - 20, 110, "PRESS START", red_color);
-            // draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
-            demo_mode_active = true;
+
+            demo_mode_active = true; // Set demo mode flag
 
             // Clear entire screen before exiting
             RIA.addr0 = 0;

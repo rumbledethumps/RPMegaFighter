@@ -115,18 +115,23 @@ void insert_high_score(int8_t position, const char* name, int16_t score)
  */
 void draw_high_scores(void)
 {
-    const uint8_t yellow_color = 0xE3;  // Yellow
-    const uint8_t white_color = 0xFF;
+    const uint8_t color_cycle[] = {0xE3, 0x1F, 0xFF, 0xF8, 0x3F, 0x07, 0xC7}; // yellow, blue, white, red, green, cyan, magenta
+    const uint8_t color_cycle_len = sizeof(color_cycle) / sizeof(color_cycle[0]);
     const uint16_t start_x = 210;
     const uint16_t start_y = 40;
-    
-    // Draw title
-    draw_text(start_x, start_y, "HIGH SCORES", yellow_color);
-    
-    // Draw each score
+
+    // Animate color based on vsync/frame (arcade effect)
+    uint8_t frame = RIA.vsync;
+
+    // Draw title with animated color
+    uint8_t title_color = color_cycle[(frame / 8) % color_cycle_len];
+    draw_text(start_x, start_y, "HIGH SCORES", title_color);
+
+    // Draw each score with animated color cycling
     for (uint8_t i = 0; i < MAX_HIGH_SCORES; i++) {
         uint16_t y = start_y + 15 + (i * 8);
-        
+        uint8_t row_color = color_cycle[(frame / 8 + i) % color_cycle_len];
+
         // Draw rank number
         char rank[3];
         if (i == 9) {
@@ -137,11 +142,11 @@ void draw_high_scores(void)
             rank[0] = '1' + i;
             rank[1] = '\0';
         }
-        draw_text(start_x, y, rank, white_color);
-        
+        draw_text(start_x, y, rank, row_color);
+
         // Draw name
-        draw_text(start_x + 10, y, high_scores[i].name, white_color);
-        
+        draw_text(start_x + 10, y, high_scores[i].name, row_color);
+
         // Draw score (5 digits)
         char score_buf[6];
         score_buf[0] = '0' + (high_scores[i].score / 10000) % 10;
@@ -150,7 +155,7 @@ void draw_high_scores(void)
         score_buf[3] = '0' + (high_scores[i].score / 10) % 10;
         score_buf[4] = '0' + high_scores[i].score % 10;
         score_buf[5] = '\0';
-        draw_text(start_x + 30, y, score_buf, white_color);
+        draw_text(start_x + 30, y, score_buf, row_color);
     }
 }
 
