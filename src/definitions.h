@@ -17,6 +17,9 @@ static int16_t dy = 0;
 #define BULLET_DATA     0xE9A8  //Player bullet Sprite (2x2)
 #define SBULLET_DATA    0xE9B0  //Super bullet Sprite (4x4)
 
+// Update your next free spot
+#define EXTRA_SPRITES_START 0xEE80
+
 //XRAM Memory addresses
 #define VGA_CONFIG_START 0xEA20 //Start of graphic config addresses (after gamepad data)
 unsigned BITMAP_CONFIG;         //Bitmap Config 

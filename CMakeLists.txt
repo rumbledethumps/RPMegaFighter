@@ -21,6 +21,7 @@ rp6502_asset(rpmegafighter 0x1E980 images/fighter.bin)
 rp6502_asset(rpmegafighter 0x1E9A0 images/ebullet.bin)
 rp6502_asset(rpmegafighter 0x1E9A8 images/bullet.bin)
 rp6502_asset(rpmegafighter 0x1E9B0 images/sbullet.bin)
+rp6502_asset(rpmegafighter 0x1ED80 images/fighter_explode.bin)
 rp6502_executable(rpmegafighter
     spaceship2.bin.rp6502
     Earth.bin.rp6502
@@ -28,6 +29,7 @@ rp6502_executable(rpmegafighter
     ebullet.bin.rp6502
     bullet.bin.rp6502
     sbullet.bin.rp6502
+    fighter_explode.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpmegafighter.hlp

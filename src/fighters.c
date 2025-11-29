@@ -80,6 +80,24 @@ static int16_t fighter_speed_max = INITIAL_FIGHTER_SPEED_MAX;
 // FUNCTIONS
 // ============================================================================
 
+#define FIGHTER_BYTES_PER_FRAME 32  // 4x4 pixels * 2 bytes per pixel
+
+void set_fighter_frame(uint8_t fighter_idx, uint8_t frame_idx) {
+    if (fighter_idx >= MAX_FIGHTERS) return; // Safety check
+
+    // 1. Calculate address of the specific fighter's configuration struct
+    unsigned sprite_config_ptr = FIGHTER_CONFIG + (fighter_idx * sizeof(vga_mode4_sprite_t));
+
+    // 2. Calculate address of the specific frame image data
+    //    Address = Start of Sheet + (Frame Number * Bytes per Frame)
+    unsigned image_data_ptr = EXPLOSION_DATA + (frame_idx * FIGHTER_BYTES_PER_FRAME);
+
+    // 3. Update the pointer in XRAM
+    //    We only change where this specific sprite looks for pixels
+    xram0_struct_set(sprite_config_ptr, vga_mode4_sprite_t, xram_sprite_ptr, image_data_ptr);
+}
+
+
 void init_fighters(void)
 {
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
@@ -162,8 +180,6 @@ void update_fighters(void)
             continue;
         }
 
-
-        
         fighters[i].x -= scroll_dx;
         fighters[i].y -= scroll_dy;
 

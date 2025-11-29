@@ -134,4 +134,8 @@
 // Demo configuration
 #define DEMO_DURATION_FRAMES (60 * 40) // 40 seconds
 
+// New Animation Data
+#define EXPLOSION_DATA    0xED80 
+// Size: 256 bytes. Ends at 0xEE80.
+
 #endif // CONSTANTS_H
