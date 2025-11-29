@@ -238,12 +238,32 @@ void show_game_over(void)
     
     uint8_t vsync_last = RIA.vsync;
     bool fire_button_released = false;
-    
+    // Timeout for waiting for fire button
+    unsigned timeout_frames = 10 * 60; // 10 seconds at 60Hz
+    unsigned frame_count = 0;
     // Wait for fire button
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
+
+        frame_count++; // Increment frame count
+
+        if (frame_count >= timeout_frames) {
+            printf("Timeout reached - continuing...\n");
+            
+            // Stop end music before returning to title screen
+            stop_music();
+            
+            // Clear screen before returning to title screen
+            RIA.addr0 = 0;
+            RIA.step0 = 1;
+            for (unsigned i = vlen; i--;) {
+                RIA.rw0 = 0;
+            }
+            
+            return;
+        }
         
         // Update music
         update_music();
