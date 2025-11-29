@@ -34,6 +34,8 @@ typedef struct {
     int16_t frame;
     int16_t lx1, ly1;
     int16_t lx2, ly2;
+    int16_t anim_timer;
+    bool is_exploding;
 } Fighter;
 
 // ============================================================================
@@ -106,6 +108,9 @@ void init_fighters(void)
         fighters[i].vx = 0;
         fighters[i].vy = 0;
         fighters[i].status = 1;
+        fighters[i].is_exploding = false; // Not exploding at start
+        fighters[i].anim_timer = 0; // Initialize animation timer
+        set_fighter_frame(i, 0); // Points back to the first image in the sheet (Normal ship)
         
         fighters[i].x = random(SCREEN_WIDTH_D2, SCREEN_WIDTH) + SCREEN_WIDTH + 144;
         fighters[i].y = random(SCREEN_HEIGHT_D2, SCREEN_HEIGHT) + SCREEN_HEIGHT + 104;
@@ -148,6 +153,21 @@ void update_fighters(void)
     // }
 
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
+
+        if (fighters[i].is_exploding) {
+            fighters[i].anim_timer++;
+    
+            // Slow down animation (e.g., change frame every 4 ticks)
+            uint8_t current_frame = fighters[i].anim_timer / 4;
+            
+            if (current_frame < 8) {
+                set_fighter_frame(i, current_frame);
+            } else {
+                // Animation done, kill fighter or respawn
+                fighters[i].is_exploding = false;
+            }
+        }
+
         if (fighters[i].status <= 0) {
             fighters[i].status--;
             if (fighters[i].status <= -FIGHTER_SPAWN_RATE) {
@@ -175,8 +195,15 @@ void update_fighters(void)
                 }
                 
                 fighters[i].status = 1;
+                fighters[i].is_exploding = false; // Reset exploding state
+                fighters[i].anim_timer = 0; // Initialize animation timer
+                set_fighter_frame(i, 0); // Points back to the first image in the sheet (Normal ship)
                 active_fighter_count++;
             }
+            if (fighters[i].is_exploding) {
+                fighters[i].x -= scroll_dx;
+                fighters[i].y -= scroll_dy;
+            } 
             continue;
         }
 
@@ -188,6 +215,7 @@ void update_fighters(void)
             fighters[i].status = 0;
             active_fighter_count--;
             enemy_score += 2;
+            fighters[i].is_exploding = true; // Start explosion sequence
             continue;
         }
         
@@ -382,7 +410,7 @@ void update_ebullets(void)
 void render_fighters(void)
 {
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
-        if (fighters[i].status > 0) {
+        if (fighters[i].status > 0 || fighters[i].is_exploding) {
             
             unsigned ptr = FIGHTER_CONFIG + i * sizeof(vga_mode4_sprite_t);
 
@@ -432,6 +460,7 @@ bool check_bullet_fighter_collision(int16_t bullet_x, int16_t bullet_y,
                 bullet_y >= fighter_screen_y - 2 && bullet_y < fighter_screen_y + 6) {
                 
                 fighters[f].status = 0;
+                fighters[f].is_exploding = true; // Start explosion sequenc
                 active_fighter_count--;
                 
                 // Award points based on current level
