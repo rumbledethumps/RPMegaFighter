@@ -740,6 +740,7 @@ int main(void)
                 if ((enter_was_down && !enter_down) || (esc_was_down && !esc_down) || (b_was_down && !b_down)) {
                     demo_mode_active = false;
                     game_over = true;
+                    stop_music(); 
                     printf("Exiting demo mode due to player input\n");
                 }
                 enter_was_down = enter_down;
@@ -758,6 +759,7 @@ int main(void)
                     // Exit demo mode after set frames
                     demo_mode_active = false;
                     game_over = true;
+                    stop_music();
                     printf("Exiting demo mode after %d frames\n", DEMO_DURATION_FRAMES);
                 }
             }

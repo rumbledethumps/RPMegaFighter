@@ -120,7 +120,7 @@
 #define GP_BTN_R3         0x40  // bit 6: R3
 
 // PSG memory location (must match sound.c)
-#define PSG_XRAM_ADDR 0xFF00
+#define PSG_XRAM_ADDR 0xED40  // 0xFF00
 
 // Text block palette/attribute constants
 // ANSI palette indices: 6 = cyan, 3 = yellow, 8 = gray
