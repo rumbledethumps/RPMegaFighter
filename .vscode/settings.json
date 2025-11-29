@@ -22,6 +22,7 @@
     },
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
-        "highscore.h": "c"
+        "highscore.h": "c",
+        "definitions.h": "c"
     }
 }

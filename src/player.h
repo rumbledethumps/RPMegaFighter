@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+extern int16_t player_x;
+extern int16_t player_y;
+extern int16_t scroll_dx;
+extern int16_t scroll_dy;
 
 /**
  * Initialize player state at game start

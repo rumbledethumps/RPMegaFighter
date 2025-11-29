@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "powerup.h"
 
 // ============================================================================
 // CONSTANTS
@@ -166,6 +167,17 @@ void update_fighters(void)
                 // Animation done, kill fighter or respawn
                 fighters[i].is_exploding = false;
             }
+
+            if (current_frame == 8 && !powerup.active) {
+                int16_t drop_chance = random(0, 100);
+                if (drop_chance < POWERUP_DROP_CHANCE_PERCENT) {
+                    powerup.active = true;
+                    powerup.timer = POWERUP_DURATION_FRAMES;
+                    powerup.x = fighters[i].x;
+                    powerup.y = fighters[i].y;
+                }
+            }
+
         }
 
         if (fighters[i].status <= 0) {

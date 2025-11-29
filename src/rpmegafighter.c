@@ -32,6 +32,7 @@
 #include "text.h"
 #include "input.h"
 #include "screens.h"
+#include "powerup.h"
 
 // ============================================================================
 // GAME STRUCTURES
@@ -98,6 +99,9 @@ extern uint8_t current_bullet_index;
 
 // Input state (keystates and start_button_pressed are in definitions.h)
 gamepad_t gamepad[GAMEPAD_COUNT];
+
+// Storage for sprite config addresses referenced across modules
+unsigned POWERUP_CONFIG;
 
 // ============================================================================
 // SINE/COSINE LOOKUP TABLES (24 steps for rotation)
@@ -281,20 +285,28 @@ static void init_graphics(void)
         xram0_struct_set(ptr, vga_mode4_sprite_t, log_size, 2);  // 4x4 sprite (2^2)
         xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
     }
-    
+
+    // Initialize power-up sprite (VGA Mode 4 - regular sprite)
+    POWERUP_CONFIG = SBULLET_CONFIG + MAX_SBULLETS * sizeof(vga_mode4_sprite_t);
+    xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, x_pos_px, -100);  // Start offscreen
+    xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, y_pos_px, -100);
+    xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, xram_sprite_ptr, POWERUP_DATA);
+    xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, log_size, 3);  // 8x8 sprite (2^3)
+    xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, has_opacity_metadata, false);
+
     // Enable sprite modes:
     // First enable Earth sprite (background layer)
     xregn(1, 0, 1, 5, 4, 0, EARTH_CONFIG, 1, 0);
     // Then enable affine sprites (player) - 1 sprite at SPACECRAFT_CONFIG
     xregn(1, 0, 1, 5, 4, 1, SPACECRAFT_CONFIG, 1, 2);
-    // Finally enable regular sprites (fighters + ebullets + bullets + sbullets) - all regular sprites in one call
-    xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS + MAX_SBULLETS, 1);
+    // Finally enable regular sprites (fighters + ebullets + bullets + sbullets + power ups) - all regular sprites in one call
+    xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS + MAX_SBULLETS + 1, 1);
 
     // Enable text mode for on-screen messages
 
-    TEXT_CONFIG = SBULLET_CONFIG + MAX_SBULLETS * sizeof(vga_mode4_sprite_t); //Config address for text mode
+    TEXT_CONFIG = 0xEC32; //SBULLET_CONFIG + MAX_SBULLETS * sizeof(vga_mode4_sprite_t); //Config address for text mode
     // Place text message data immediately after text config entries
-    text_message_addr = TEXT_CONFIG + NTEXT * sizeof(vga_mode1_config_t); //address to store text message
+    text_message_addr = 0xEC42; //TEXT_CONFIG + NTEXT * sizeof(vga_mode1_config_t); //address to store text message
     // Calculate and print end of text storage (MESSAGE_LENGTH * bytes_per_char)
     const unsigned bytes_per_char = 3; // we write 3 bytes per character into text RAM
     unsigned text_storage_end = text_message_addr + MESSAGE_LENGTH * bytes_per_char;
@@ -309,6 +321,7 @@ static void init_graphics(void)
     printf("  EBULLET_CONFIG=0x%X\n", EBULLET_CONFIG);
     printf("  BULLET_CONFIG=0x%X\n", BULLET_CONFIG);
     printf("  SBULLET_CONFIG=0x%X\n", SBULLET_CONFIG);
+    printf("  POWERUP_CONFIG=0x%X\n", POWERUP_CONFIG);
     printf("  TEXT_CONFIG=0x%X\n", TEXT_CONFIG);
     printf("  text_message_addr=0x%X\n", text_message_addr);
     printf("Struct sizes: vga_mode4_sprite_t=%u, vga_mode1_config_t=%u\n", (unsigned)sizeof(vga_mode4_sprite_t), (unsigned)sizeof(vga_mode1_config_t));
@@ -544,6 +557,10 @@ void render_game(void)
     
     // Update player sprite on screen
     update_player_sprite();
+
+    // Update power-up sprite if active
+    render_powerup();
+
 }
 
 // ============================================================================

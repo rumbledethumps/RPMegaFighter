@@ -18,7 +18,7 @@ static int16_t dy = 0;
 #define SBULLET_DATA    0xE9B0  //Super bullet Sprite (4x4)
 
 // Update your next free spot
-#define EXTRA_SPRITES_START 0xEE80
+#define EXTRA_SPRITES_START 0xEF10
 
 //XRAM Memory addresses
 #define VGA_CONFIG_START 0xEA20 //Start of graphic config addresses (after gamepad data)
@@ -32,7 +32,6 @@ unsigned EBULLET_CONFIG;        //Enemy bullet sprite config
 unsigned BULLET_CONFIG;         //Player bullet sprite config
 unsigned SBULLET_CONFIG;        //Super bullet sprite config
 unsigned TEXT_CONFIG;           //On screen text configs
-
 
 // Star arrays (defined here, declared in bkgstars.h)
 int16_t star_x[32] = {0};

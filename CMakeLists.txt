@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.18)
 
 add_subdirectory(tools)
 
+# Add include directory for rp6502 platform headers on my system.
+# include_directories(/Users/rowe/Software/rp6502/llvm-mos/mos-platform/rp6502/include)
+
 set(LLVM_MOS_PLATFORM rp6502)
 find_package(llvm-mos-sdk REQUIRED)
 
@@ -22,6 +25,7 @@ rp6502_asset(rpmegafighter 0x1E9A0 images/ebullet.bin)
 rp6502_asset(rpmegafighter 0x1E9A8 images/bullet.bin)
 rp6502_asset(rpmegafighter 0x1E9B0 images/sbullet.bin)
 rp6502_asset(rpmegafighter 0x1ED80 images/fighter_explode.bin)
+rp6502_asset(rpmegafighter 0x1EE80 images/powerup.bin)
 rp6502_executable(rpmegafighter
     spaceship2.bin.rp6502
     Earth.bin.rp6502
@@ -30,6 +34,7 @@ rp6502_executable(rpmegafighter
     bullet.bin.rp6502
     sbullet.bin.rp6502
     fighter_explode.bin.rp6502
+    powerup.bin.rp6502
     DATA file
     RESET file
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpmegafighter.hlp
@@ -51,6 +56,7 @@ target_sources(rpmegafighter PRIVATE
     src/input.c
     src/screens.c
     src/random.c
+    src/powerup.c
 )
 
 # Gamepad test utility
