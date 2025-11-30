@@ -226,7 +226,7 @@ bool load_joystick_config(void)
             case 2: action = ACTION_ROTATE_LEFT; break;
             case 3: action = ACTION_ROTATE_RIGHT; break;
             case 4: action = ACTION_FIRE; break;
-            case 5: action = ACTION_FIRE; break;  // SUPER FIRE maps to FIRE
+            case 5: action = ACTION_SUPER_FIRE; break; 
             case 6: action = ACTION_PAUSE; break;
             default: continue;  // Skip invalid actions
         }
