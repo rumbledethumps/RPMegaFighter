@@ -42,7 +42,7 @@ If the default controls do not suit your gamepad, you can remap them using the i
 
 ## Points Strategy
 - Destroying basic enemy ships grants **1 point**.
-- If the enemy shoots you, you get **1 point** (survival bonus).
+- If the enemy shoots you, the enemy gets **1 point**.
 - If you crash into the enemy, the enemy gets **2 points**!
 
 ## Heads Up Display
