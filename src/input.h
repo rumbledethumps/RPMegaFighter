@@ -62,6 +62,13 @@ typedef struct {
     uint8_t gamepad_mask;     // Bit mask for the button
 } ButtonMapping;
 
+    
+// Gamepad Field Offsets (for ButtonMapping.gamepad_button)
+#define GP_FIELD_DPAD    0  // D-Pad and Status
+#define GP_FIELD_STICKS  1  // Digital Sticks
+#define GP_FIELD_BTN0    2  // Face Buttons (A,B,X,Y)
+#define GP_FIELD_BTN1    3  // Triggers/Select/Start
+
 // Button mapping arrays (one set per player/gamepad)
 extern ButtonMapping button_mappings[GAMEPAD_COUNT][ACTION_COUNT];
 

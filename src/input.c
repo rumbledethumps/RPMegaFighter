@@ -74,37 +74,37 @@ void reset_button_mappings(uint8_t player_id)
     
     // ACTION_THRUST: Up Arrow or Left Stick Up
     button_mappings[player_id][ACTION_THRUST].keyboard_key = KEY_UP;
-    button_mappings[player_id][ACTION_THRUST].gamepad_button = 1; // sticks field
+    button_mappings[player_id][ACTION_THRUST].gamepad_button = GP_FIELD_STICKS; // sticks field
     button_mappings[player_id][ACTION_THRUST].gamepad_mask = GP_LSTICK_UP;
     
     // ACTION_REVERSE_THRUST: Down Arrow or Left Stick Down
     button_mappings[player_id][ACTION_REVERSE_THRUST].keyboard_key = KEY_DOWN;
-    button_mappings[player_id][ACTION_REVERSE_THRUST].gamepad_button = 1; // sticks field
+    button_mappings[player_id][ACTION_REVERSE_THRUST].gamepad_button = GP_FIELD_STICKS; // sticks field
     button_mappings[player_id][ACTION_REVERSE_THRUST].gamepad_mask = GP_LSTICK_DOWN;
     
     // ACTION_ROTATE_LEFT: Left Arrow or Left Stick Left
     button_mappings[player_id][ACTION_ROTATE_LEFT].keyboard_key = KEY_LEFT;
-    button_mappings[player_id][ACTION_ROTATE_LEFT].gamepad_button = 1; // sticks field
+    button_mappings[player_id][ACTION_ROTATE_LEFT].gamepad_button = GP_FIELD_STICKS; // sticks field
     button_mappings[player_id][ACTION_ROTATE_LEFT].gamepad_mask = GP_LSTICK_LEFT;
     
     // ACTION_ROTATE_RIGHT: Right Arrow or Left Stick Right
     button_mappings[player_id][ACTION_ROTATE_RIGHT].keyboard_key = KEY_RIGHT;
-    button_mappings[player_id][ACTION_ROTATE_RIGHT].gamepad_button = 1; // sticks field
+    button_mappings[player_id][ACTION_ROTATE_RIGHT].gamepad_button = GP_FIELD_STICKS; // sticks field
     button_mappings[player_id][ACTION_ROTATE_RIGHT].gamepad_mask = GP_LSTICK_RIGHT;
     
     // ACTION_FIRE: Space or A button
     button_mappings[player_id][ACTION_FIRE].keyboard_key = KEY_SPACE;
-    button_mappings[player_id][ACTION_FIRE].gamepad_button = 2; // btn0 field
+    button_mappings[player_id][ACTION_FIRE].gamepad_button = GP_FIELD_BTN0; // btn0 field
     button_mappings[player_id][ACTION_FIRE].gamepad_mask = GP_BTN_A;
     
     // ACTION_SUPER_FIRE: C key or B button (for sbullets)
     button_mappings[player_id][ACTION_SUPER_FIRE].keyboard_key = KEY_C;
-    button_mappings[player_id][ACTION_SUPER_FIRE].gamepad_button = 2; // btn0 field
+    button_mappings[player_id][ACTION_SUPER_FIRE].gamepad_button = GP_FIELD_BTN0; // btn0 field
     button_mappings[player_id][ACTION_SUPER_FIRE].gamepad_mask = GP_BTN_X;
     
-    // ACTION_PAUSE: ESC or START button
-    button_mappings[player_id][ACTION_PAUSE].keyboard_key = KEY_ESC;
-    button_mappings[player_id][ACTION_PAUSE].gamepad_button = 3; // btn1 field
+    // ACTION_PAUSE: START button
+    button_mappings[player_id][ACTION_PAUSE].keyboard_key = KEY_ENTER;
+    button_mappings[player_id][ACTION_PAUSE].gamepad_button = GP_FIELD_BTN1; // btn1 field
     button_mappings[player_id][ACTION_PAUSE].gamepad_mask = GP_BTN_START;
 }
 

@@ -721,12 +721,12 @@ int main(void)
             
             // Handle player fire buttons
             // Regular bullets: keyboard SPACE or gamepad A button (0x01)
-            if (key(KEY_SPACE) || (gamepad[0].btn0 & GP_BTN_A) || (demo_mode_active)) {
+            if (is_action_pressed(0, ACTION_FIRE) || (demo_mode_active)) {
                 fire_bullet();
             }
             
             // Super bullets: keyboard Left Shift or gamepad X button (0x08)
-            if (key(KEY_LEFTSHIFT) || (gamepad[0].btn0 & GP_BTN_X) || (demo_mode_active)) {
+            if (is_action_pressed(0, ACTION_SUPER_FIRE) || (demo_mode_active)) {
                 fire_sbullet(get_player_rotation());
             }
             

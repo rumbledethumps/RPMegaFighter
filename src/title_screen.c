@@ -12,6 +12,7 @@
 #include "graphics.h"
 #include "random.h"
 #include "usb_hid_keys.h"
+#include "input.h"
 // #include "demo.h"
 
 // External references
@@ -21,19 +22,19 @@ extern void draw_high_scores(void);
 extern const uint16_t vlen;
 extern bool demo_mode_active;
 
-// Gamepad structure and constants
-typedef struct {
-    uint8_t dpad;
-    uint8_t sticks;
-    uint8_t btn0;
-    uint8_t btn1;
-    int8_t lx;         // Signed for analog sticks
-    int8_t ly;
-    int8_t rx;
-    int8_t ry;
-    uint8_t l2;
-    uint8_t r2;
-} gamepad_t;
+// // Gamepad structure and constants
+// typedef struct {
+//     uint8_t dpad;
+//     uint8_t sticks;
+//     uint8_t btn0;
+//     uint8_t btn1;
+//     int8_t lx;         // Signed for analog sticks
+//     int8_t ly;
+//     int8_t rx;
+//     int8_t ry;
+//     uint8_t l2;
+//     uint8_t r2;
+// } gamepad_t;
 
 extern uint8_t keystates[KEYBOARD_BYTES];
 #define key(code) (keystates[code >> 3] & (1 << (code & 7)))
@@ -132,14 +133,14 @@ void show_title_screen(void)
         // Check for keyboard ENTER or gamepad START button to start game
         bool start_pressed = false;
         
-        // Check keyboard ENTER
-        if (key(KEY_ENTER)) {
-            start_pressed = true;
-        }
+        // // Check keyboard ENTER
+        // if (key(KEY_ENTER)) {
+        //     start_pressed = true;
+        // }
         
         // Check gamepad START button (BTN1 bit 0x08)
         if (gamepad[0].dpad & GP_CONNECTED) {
-            if (gamepad[0].btn1 & GP_BTN_START) {
+            if (is_action_pressed(0, ACTION_PAUSE)) {
                 start_pressed = true;
             }
         }
@@ -189,7 +190,7 @@ void show_title_screen(void)
                     }
                     
                     // Exit loop when both ENTER and START are released
-                    if (!key(KEY_ENTER) && !(gamepad[0].btn1 & GP_BTN_START)) {
+                    if (!is_action_pressed(0, ACTION_PAUSE)) {
                         break;
                     }
                 }
@@ -223,10 +224,10 @@ void show_title_screen(void)
         }
 
         // Check for A+Y buttons pressed together to exit
-        if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_Y)) {
-            printf("A+Y pressed - exiting...\n");
-            exit(0);
-        }
+        // if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_Y)) {
+        //     printf("A+Y pressed - exiting...\n");
+        //     exit(0);
+        // }
         
         // Check for ESC to exit game
         if (key(KEY_ESC)) {

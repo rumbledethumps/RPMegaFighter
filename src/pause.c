@@ -3,6 +3,7 @@
 #include "screen.h"
 #include <rp6502.h>
 #include <stdio.h>
+#include "input.h"
 
 #include "graphics.h"
 
@@ -11,18 +12,18 @@ extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
 extern void clear_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 
 // Gamepad structure and constants
-typedef struct {
-    uint8_t dpad;
-    uint8_t sticks;
-    uint8_t btn0;
-    uint8_t btn1;
-    int8_t lx;         // Signed for analog sticks
-    int8_t ly;
-    int8_t rx;
-    int8_t ry;
-    uint8_t l2;
-    uint8_t r2;
-} gamepad_t;
+// typedef struct {
+//     uint8_t dpad;
+//     uint8_t sticks;
+//     uint8_t btn0;
+//     uint8_t btn1;
+//     int8_t lx;         // Signed for analog sticks
+//     int8_t ly;
+//     int8_t rx;
+//     int8_t ry;
+//     uint8_t l2;
+//     uint8_t r2;
+// } gamepad_t;
 
 extern gamepad_t gamepad[4];
 
@@ -129,14 +130,14 @@ void handle_pause_input(void)
 {
     bool pause_button_pressed = false;
     
-    // Check keyboard ENTER key
-    if (key(KEY_ENTER)) {
-        pause_button_pressed = true;
-    }
+    // // Check keyboard ENTER key
+    // if (key(KEY_ENTER)) {
+    //     pause_button_pressed = true;
+    // }
     
     // Check gamepad START button (BTN1 bit 0x08)
     if (gamepad[0].dpad & GP_CONNECTED) {
-        if (gamepad[0].btn1 & GP_BTN_START) {
+        if (is_action_pressed(0, ACTION_PAUSE)) {
             pause_button_pressed = true;
         }
     }
@@ -173,8 +174,8 @@ void reset_pause_state(void)
 bool check_pause_exit(void)
 {
     // Check for A+Y buttons pressed together to exit
-    if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_Y)) {
-        return true;
-    }
+    // if ((gamepad[0].btn0 & GP_BTN_A) && (gamepad[0].btn0 & GP_BTN_Y)) {
+    //     return true;
+    // }
     return false;
 }

@@ -219,8 +219,7 @@ void get_player_initials(char* name)
         }
         
         // Check if all fire buttons are released
-        bool any_button_pressed = key(KEY_SPACE) || 
-                                  (gamepad[0].btn0 & GP_BTN_A);  // A
+        bool any_button_pressed = is_action_pressed(0, ACTION_FIRE) || is_action_pressed(0, ACTION_SUPER_FIRE);  // A or B
         
         if (!any_button_pressed) {
             break;  // All buttons released, can start entering initials
