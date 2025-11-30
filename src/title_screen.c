@@ -45,7 +45,7 @@ void show_title_screen(void)
 {
     const uint8_t red_color = 0x03;      // Pure red
     const uint8_t blue_color = 0x1F;     // Blue
-    const uint16_t center_x = 110;       // X position for centered text
+    const uint16_t center_x = 90;       // X position for centered text
     
     // Clear any remaining bullets from previous game
     init_sbullets();
@@ -79,10 +79,10 @@ void show_title_screen(void)
     uint8_t current_color = red_color;
     
     // Draw initial "PRESS START" text
-    draw_text(center_x - 20, 110, "PRESS START", red_color);
+    draw_text(center_x, 110, "PRESS START", red_color);
     
     // Draw exit instruction
-    draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
+    // draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
     
     printf("Title screen displayed. Press START to begin...\n");
     
@@ -244,10 +244,10 @@ void show_title_screen(void)
             if (press_start_visible) {
                 // Alternate color between red and blue
                 current_color = (current_color == red_color) ? blue_color : red_color;
-                draw_text(center_x - 20, 110, "PRESS START", current_color);
+                draw_text(center_x, 110, "PRESS START", current_color);
             } else {
                 // Clear the text
-                clear_rect(center_x - 20, 110, 120, 5);
+                clear_rect(center_x, 110, 120, 5);
             }
         }
     }

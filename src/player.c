@@ -208,12 +208,8 @@ void update_player(bool demomode)
             rotate_left = (demo_rotate_dir == -1);
             rotate_right = (demo_rotate_dir == 1);
         } else {
-            rotate_left = key(KEY_LEFT) || 
-                          (gamepad[0].sticks & GP_LSTICK_LEFT) ||
-                          (gamepad[0].dpad & GP_DPAD_LEFT);
-            rotate_right = key(KEY_RIGHT) || 
-                           (gamepad[0].sticks & GP_LSTICK_RIGHT) ||
-                           (gamepad[0].dpad & GP_DPAD_RIGHT);
+            rotate_left = is_action_pressed(0, ACTION_ROTATE_LEFT);
+            rotate_right = is_action_pressed(0, ACTION_ROTATE_RIGHT);
         }
         
         if (rotate_left) {
@@ -270,11 +266,9 @@ void update_player(bool demomode)
         }
         thrust = demo_thrusting;
     } else {
-        thrust = key(KEY_UP) || 
-                 (gamepad[0].sticks & GP_LSTICK_UP) ||
-                 (gamepad[0].dpad & GP_DPAD_UP);
+        thrust = is_action_pressed(0, ACTION_THRUST);
     }
-    // bool reverse_thrust = key(KEY_DOWN) || (gamepad[0].sticks & GP_LSTICK_DOWN) || (gamepad[0].dpad & GP_DPAD_DOWN);  // Disabled for game balance
+    // bool reverse_thrust = is_action_pressed(0, ACTION_REVERSE_THRUST);  // Disabled for game balance
     
     if (thrust) {
         int16_t thrust_vx, thrust_vy;

@@ -97,7 +97,7 @@ void display_pause_message(bool show_paused)
         
         // Add exit instruction below PAUSED
         extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
-        draw_text(center_x + 10, center_y + 20, "A+Y TO EXIT", exit_color);
+        draw_text(center_x + 10, center_y + 20, "ESC TO EXIT GAME", exit_color);
         for (uint16_t x = center_x + 48; x < center_x + 56; x++) {
             set(x, center_y, pause_color);
             set(x, center_y + 6, pause_color);

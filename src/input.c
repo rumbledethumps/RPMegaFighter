@@ -47,8 +47,6 @@ void handle_input(void)
         gamepad[i].r2 = RIA.rw0;
     }
     
-    // Handle pause button (moved to pause.c)
-    handle_pause_input();
 }
 
 /**

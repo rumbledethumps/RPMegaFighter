@@ -287,13 +287,9 @@ void get_player_initials(char* name)
         draw_text(center_x + 10 + (current_char * 4), center_y + 20, underscore, yellow_color);
         
         // Handle up/down to change letter (support both DPAD and stick inputs)
-        bool up_now = key(KEY_UP) || 
-                      (gamepad[0].dpad & GP_DPAD_UP) || 
-                      (gamepad[0].sticks & GP_LSTICK_UP);
-        bool down_now = key(KEY_DOWN) || 
-                        (gamepad[0].dpad & GP_DPAD_DOWN) || 
-                        (gamepad[0].sticks & GP_LSTICK_DOWN);
-        
+        bool up_now = is_action_pressed(0, ACTION_THRUST);
+        bool down_now = is_action_pressed(0, ACTION_REVERSE_THRUST);
+
         if (up_now && !up_pressed) {
             name[current_char]++;
             if (name[current_char] > 'Z') name[current_char] = 'A';

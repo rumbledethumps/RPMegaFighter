@@ -638,8 +638,6 @@ int main(void)
     printf("  ESC to quit, START to pause\n\n");
     
     uint8_t vsync_last = RIA.vsync;
-    
-    
 
     // Main game loop - includes title screen and gameplay
     while (true) {
@@ -666,6 +664,7 @@ int main(void)
         
         // Gameplay loop
         game_over = false;
+        bool demo_input_was_pressed = false;
         while (!game_over) {
             // Wait for vertical sync (60 Hz)
             if (RIA.vsync == vsync_last)
@@ -673,10 +672,43 @@ int main(void)
             vsync_last = RIA.vsync;
         
             // Read input
+            handle_input(); 
+
+            // This prevents the START button from freezing the game during the demo
             if (!demo_mode_active) {
-                handle_input();
+                handle_pause_input();
             }
             
+            if (demo_mode_active) {
+                demo_frames++;
+                
+                // A. Prevent the "Pause" effect
+                // If handle_input() just paused the game, unpause it immediately.
+                // We do this so the internal state in pause.c stays correct (Not Paused).
+                if (is_game_paused()) {
+                    handle_pause_input(); // Call it again to toggle it back to FALSE
+                }
+
+                // B. Check for Exit Conditions
+                // Check Semantic Actions (FIRE or PAUSE/START)
+                bool input_pressed = is_action_pressed(0, ACTION_FIRE);
+
+                // C. Check for Button Release (Edge Detection)
+                // Only exit if input WAS pressed last frame and is NOT pressed now.
+                if (demo_input_was_pressed && !input_pressed) {
+                    demo_mode_active = false;
+                    game_over = true;
+                    stop_music(); 
+                    printf("Exiting demo mode due to player input\n");
+                    
+                    // Critical: Reset pause state one last time to ensure 
+                    // the real game doesn't start immediately paused.
+                    if (is_game_paused()) handle_pause_input();
+                }
+                
+                // Update history for the next frame
+                demo_input_was_pressed = input_pressed;
+            }
             
             // Check for ESC key to exit
             if (key(KEY_ESC)) {
@@ -685,10 +717,12 @@ int main(void)
                 break;
             }
             
+            // We override this to FALSE if we are in demo mode
+            bool currently_paused = is_game_paused();
+            if (demo_mode_active) currently_paused = false;
+
             // Handle pause state and music
             static bool was_paused = false;
-            bool currently_paused = is_game_paused();
-            
             if (currently_paused && !was_paused) {
                 // Just paused - stop music
                 stop_music();
@@ -743,68 +777,28 @@ int main(void)
             // Render frame
             render_game();
             draw_hud();
-            
-            // Increment frame counter
-            game_frame++;
-            if (game_frame >= 60) {
-                game_frame = 0;
-            }
 
-            // Increment demo mode frame counter
+            // Demo Overlay Rendering (Kept at bottom to draw on top)
             if (demo_mode_active) {
-                demo_frames++;
-
-                // Read input so we can exit demo early if the player provides input.
-                RIA.addr0 = KEYBOARD_INPUT;
-                RIA.step0 = 1;
-                for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-                    keystates[i] = RIA.rw0;
-                }
-
-                RIA.addr0 = GAMEPAD_INPUT;
-                RIA.step0 = 1;
-                for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-                    gamepad[i].dpad = RIA.rw0;
-                    gamepad[i].sticks = RIA.rw0;
-                    gamepad[i].btn0 = RIA.rw0;
-                    gamepad[i].btn1 = RIA.rw0;
-                    gamepad[i].lx = RIA.rw0;
-                    gamepad[i].ly = RIA.rw0;
-                    gamepad[i].rx = RIA.rw0;
-                    gamepad[i].ry = RIA.rw0;
-                    gamepad[i].l2 = RIA.rw0;
-                    gamepad[i].r2 = RIA.rw0;
-                }
-
-                bool enter_down = (keystates[KEY_ENTER >> 3] & (1 << (KEY_ENTER & 7))) != 0;
-                bool esc_down = (keystates[KEY_ESC >> 3] & (1 << (KEY_ESC & 7))) != 0;
-                bool b_down = (gamepad[0].btn0 & GP_BTN_B) != 0;
-                // Exit only if any was down and is now released
-                if ((enter_was_down && !enter_down) || (esc_was_down && !esc_down) || (b_was_down && !b_down)) {
-                    demo_mode_active = false;
-                    game_over = true;
-                    stop_music(); 
-                    printf("Exiting demo mode due to player input\n");
-                }
-                enter_was_down = enter_down;
-                esc_was_down = esc_down;
-                b_was_down = b_down;
-
-
                 // Update demo text color and text only every 20 frames
                 if ((demo_frames % 20) == 0) {
                     uint8_t demo_color = demo_colors[(demo_frames / 20) % num_demo_colors];
                     draw_text(SCREEN_WIDTH / 2 - 23, 25, "DEMO MODE", demo_color);
-                    draw_text(SCREEN_WIDTH / 2 - 63, SCREEN_HEIGHT - 15, "PRESS ENTER, ESC, OR B TO EXIT", demo_color);
+                    draw_text(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT - 15, "PRESS FIRE TO EXIT", demo_color);
                 }
 
                 if (demo_frames >= DEMO_DURATION_FRAMES) {
-                    // Exit demo mode after set frames
                     demo_mode_active = false;
                     game_over = true;
                     stop_music();
                     printf("Exiting demo mode after %d frames\n", DEMO_DURATION_FRAMES);
                 }
+            }
+            
+            // Increment frame counter
+            game_frame++;
+            if (game_frame >= 60) {
+                game_frame = 0;
             }
             
             // Check win/lose conditions
