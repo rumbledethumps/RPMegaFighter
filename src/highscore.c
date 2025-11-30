@@ -169,92 +169,60 @@ void get_player_initials(char* name)
     const uint16_t center_x = 100;
     const uint16_t center_y = 100;
     
+    // Default Name
     name[0] = 'A';
     name[1] = 'A';
     name[2] = 'A';
     name[3] = '\0';
     
-    uint8_t current_char = 0;  // Which character we're editing (0-2)
+    uint8_t current_char = 0;   // Editing index 0-2
     uint8_t vsync_last = RIA.vsync;
-    bool up_pressed = false;
-    bool down_pressed = false;
-    bool fire_pressed = false;
-    uint8_t blink_counter = 0;  // Counter for blinking (0.1s = 6 frames at 60 FPS)
-    bool blink_state = false;   // Current blink state
     
+    // Input Edge Detection States
+    bool up_was_pressed = false;
+    bool down_was_pressed = false;
+    bool fire_was_pressed = false;
+    
+    // Visual States
+    uint8_t blink_counter = 0;
+    bool blink_state = false;
+    
+    // Draw UI
     draw_text(center_x - 20, center_y - 15, "NEW HIGH SCORE!", yellow_color);
     draw_text(center_x - 20, center_y, "ENTER INITIALS:", yellow_color);
     
     printf("\nNEW HIGH SCORE! Enter your initials\n");
     
-    // Wait for all buttons to be released before starting
+    // ---------------------------------------------------------
+    // PHASE 1: Wait for Release (Debounce)
+    // Wait until FIRE is NOT pressed to prevent accidental input
+    // ---------------------------------------------------------
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
         
-        // Update music
+        handle_input();
         update_music();
         
-        // Read input
-        RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-            keystates[i] = RIA.rw0;
-        }
-        
-        RIA.addr0 = GAMEPAD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-            gamepad[i].dpad = RIA.rw0;
-            gamepad[i].sticks = RIA.rw0;
-            gamepad[i].btn0 = RIA.rw0;
-            gamepad[i].btn1 = RIA.rw0;
-            gamepad[i].lx = RIA.rw0;
-            gamepad[i].ly = RIA.rw0;
-            gamepad[i].rx = RIA.rw0;
-            gamepad[i].ry = RIA.rw0;
-            gamepad[i].l2 = RIA.rw0;
-            gamepad[i].r2 = RIA.rw0;
-        }
-        
-        // Check if all fire buttons are released
-        bool any_button_pressed = is_action_pressed(0, ACTION_FIRE) || is_action_pressed(0, ACTION_SUPER_FIRE);  // A or B
-        
-        if (!any_button_pressed) {
-            break;  // All buttons released, can start entering initials
+        // Check if FIRE is released
+        if (!is_action_pressed(0, ACTION_FIRE)) {
+            break;
         }
     }
     
+    // ---------------------------------------------------------
+    // PHASE 2: Entry Loop
+    // ---------------------------------------------------------
     while (current_char < 3) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
         
-        // Update music
+        handle_input();
         update_music();
         
-        // Read input
-        RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-            keystates[i] = RIA.rw0;
-        }
-        
-        RIA.addr0 = GAMEPAD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-            gamepad[i].dpad = RIA.rw0;
-            gamepad[i].sticks = RIA.rw0;
-            gamepad[i].btn0 = RIA.rw0;
-            gamepad[i].btn1 = RIA.rw0;
-            gamepad[i].lx = RIA.rw0;
-            gamepad[i].ly = RIA.rw0;
-            gamepad[i].rx = RIA.rw0;
-            gamepad[i].ry = RIA.rw0;
-            gamepad[i].l2 = RIA.rw0;
-            gamepad[i].r2 = RIA.rw0;
-        }
+        // --- VISUALS ---
         
         // Update blink counter (0.1s = 6 frames at 60 FPS)
         blink_counter++;
@@ -263,60 +231,55 @@ void get_player_initials(char* name)
             blink_state = !blink_state;
         }
         
-        // Clear the name area before redrawing to avoid character overlap
-        clear_rect(center_x + 10, center_y + 15, 16, 10);
+        // Clear the name area to prevent artifacts
+        clear_rect(center_x + 10, center_y + 15, 32, 12);
         
-        // Display current name with current character blinking
+        // Draw the 3 characters
         for (uint8_t i = 0; i < 3; i++) {
             char letter[2] = {name[i], '\0'};
-            uint8_t color;
+            uint8_t color = yellow_color;
             
-            if (i == current_char) {
-                // Current character blinks between yellow and white
-                color = blink_state ? white_color : yellow_color;
-            } else {
-                // Other characters stay yellow
-                color = yellow_color;
+            // Only the active character blinks
+            if (i == current_char && blink_state) {
+                color = white_color;
             }
             
-            draw_text(center_x + 10 + (i * 4), center_y + 15, letter, color);
+            draw_text(center_x + 10 + (i * 8), center_y + 15, letter, color);
         }
         
-        // Highlight current character with underscore
+        // Draw Underscore under current char
         char underscore[2] = "_";
-        draw_text(center_x + 10 + (current_char * 4), center_y + 20, underscore, yellow_color);
+        draw_text(center_x + 10 + (current_char * 8), center_y + 20, underscore, yellow_color);
         
-        // Handle up/down to change letter (support both DPAD and stick inputs)
+        // --- INPUT HANDLING ---
+        
+        // 1. UP Input (Thrust Action)
         bool up_now = is_action_pressed(0, ACTION_THRUST);
-        bool down_now = is_action_pressed(0, ACTION_REVERSE_THRUST);
-
-        if (up_now && !up_pressed) {
+        if (up_now && !up_was_pressed) {
             name[current_char]++;
             if (name[current_char] > 'Z') name[current_char] = 'A';
         }
-        up_pressed = up_now;
+        up_was_pressed = up_now;
         
-        if (down_now && !down_pressed) {
+        // 2. DOWN Input (Reverse Thrust Action)
+        bool down_now = is_action_pressed(0, ACTION_REVERSE_THRUST);
+        if (down_now && !down_was_pressed) {
             name[current_char]--;
             if (name[current_char] < 'A') name[current_char] = 'Z';
         }
-        down_pressed = down_now;
+        down_was_pressed = down_now;
         
-        // Handle fire to move to next character
-        bool fire_now = key(KEY_SPACE) || 
-                       (gamepad[0].btn0 & 0x04) ||  // A
-                       (gamepad[0].btn0 & 0x02);    // B
-        
-        if (fire_now && !fire_pressed) {
-            // Clear underscore
-            clear_rect(center_x + 10 + (current_char * 4), center_y + 20, 4, 5);
+        // 3. CONFIRM Input (Fire Action)
+        bool fire_now = is_action_pressed(0, ACTION_FIRE);
+        if (fire_now && !fire_was_pressed) {
+            // Advance to next character
             current_char++;
         }
-        fire_pressed = fire_now;
+        fire_was_pressed = fire_now;
     }
     
     printf("Initials entered: %s\n", name);
     
-    // Clear the entry screen
+    // Clear the entry screen area before returning
     clear_rect(center_x - 20, center_y - 15, 130, 40);
 }

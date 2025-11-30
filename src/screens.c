@@ -8,6 +8,7 @@
 #include "usb_hid_keys.h"
 #include "powerup.h"
 #include "sbullets.h"
+#include "input.h"
 
 // External references
 extern void draw_text(int16_t x, int16_t y, const char* text, uint8_t color);
@@ -36,19 +37,19 @@ typedef struct {
 
 extern Bullet bullets[];
 
-// Gamepad structure
-typedef struct {
-    uint8_t dpad;
-    uint8_t sticks;
-    uint8_t btn0;
-    uint8_t btn1;
-    int8_t lx;
-    int8_t ly;
-    int8_t rx;
-    int8_t ry;
-    uint8_t l2;
-    uint8_t r2;
-} gamepad_t;
+// // Gamepad structure
+// typedef struct {
+//     uint8_t dpad;
+//     uint8_t sticks;
+//     uint8_t btn0;
+//     uint8_t btn1;
+//     int8_t lx;
+//     int8_t ly;
+//     int8_t rx;
+//     int8_t ry;
+//     uint8_t l2;
+//     uint8_t r2;
+// } gamepad_t;
 
 extern gamepad_t gamepad[GAMEPAD_COUNT];
 extern uint8_t keystates[KEYBOARD_BYTES];
@@ -71,118 +72,65 @@ void show_level_up(void)
         
     // Draw "LEVEL UP" message
     draw_text(center_x, center_y, "LEVEL UP", blue_color);
-    draw_text(center_x - 45, center_y + 15, "PRESS B TO CONTINUE", white_color);
+    // Changed text to match the Action, not a specific button
+    draw_text(center_x - 45, center_y + 15, "PRESS FIRE TO CONTINUE", white_color);
     
     printf("\n*** LEVEL UP! Now on level %d ***\n", game_level);
     
     uint8_t vsync_last = RIA.vsync;
-    bool start_pressed = false;
     
-    // Wait for START button to be released first
+    // ---------------------------------------------------------
+    // PHASE 1: Wait for FIRE to be RELEASED
+    // (Prevents accidental skipping if button was held down)
+    // ---------------------------------------------------------
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
         
-        // Read input
-        RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-            keystates[i] = RIA.rw0;
-        }
-        
-        RIA.addr0 = GAMEPAD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-            gamepad[i].dpad = RIA.rw0;
-            gamepad[i].sticks = RIA.rw0;
-            gamepad[i].btn0 = RIA.rw0;
-            gamepad[i].btn1 = RIA.rw0;
-            gamepad[i].lx = RIA.rw0;
-            gamepad[i].ly = RIA.rw0;
-            gamepad[i].rx = RIA.rw0;
-            gamepad[i].ry = RIA.rw0;
-            gamepad[i].l2 = RIA.rw0;
-            gamepad[i].r2 = RIA.rw0;
-        }
+        // Update input state
+        handle_input();
 
-        // Check if B button or ENTER is released
-        if (!(gamepad[0].btn0 & GP_BTN_B) && !key(KEY_ENTER)) {
+        // Break only when FIRE is NOT pressed
+        if (!is_action_pressed(0, ACTION_FIRE)) {
             break;
         }
     }
     
-    // Now wait for B button or ENTER to be pressed
+    // ---------------------------------------------------------
+    // PHASE 2: Wait for FIRE to be PRESSED
+    // (The actual user interaction)
+    // ---------------------------------------------------------
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
         
-        // Read input
-        RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-            keystates[i] = RIA.rw0;
-        }
+        handle_input();
         
-        RIA.addr0 = GAMEPAD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-            gamepad[i].dpad = RIA.rw0;
-            gamepad[i].sticks = RIA.rw0;
-            gamepad[i].btn0 = RIA.rw0;
-            gamepad[i].btn1 = RIA.rw0;
-            gamepad[i].lx = RIA.rw0;
-            gamepad[i].ly = RIA.rw0;
-            gamepad[i].rx = RIA.rw0;
-            gamepad[i].ry = RIA.rw0;
-            gamepad[i].l2 = RIA.rw0;
-            gamepad[i].r2 = RIA.rw0;
+        // Break the moment FIRE is pressed
+        if (is_action_pressed(0, ACTION_FIRE)) {
+            break; 
         }
-        // Check for B button or ENTER key
-        bool start_now = (gamepad[0].btn0 & GP_BTN_B) || key(KEY_ENTER);
-        
-        if (start_now && !start_pressed) {
-            break;  // B pressed, continue to next level
-        }
-        start_pressed = start_now;
     }
 
-    // Wait for B button to be released before exiting
+    // ---------------------------------------------------------
+    // PHASE 3: Wait for FIRE to be RELEASED Again
+    // (Prevents the ship from firing immediately when game resumes)
+    // ---------------------------------------------------------
     while (true) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
         
-        // Read input
-        RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-            keystates[i] = RIA.rw0;
-        }
+        handle_input();
         
-        RIA.addr0 = GAMEPAD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-            gamepad[i].dpad = RIA.rw0;
-            gamepad[i].sticks = RIA.rw0;
-            gamepad[i].btn0 = RIA.rw0;
-            gamepad[i].btn1 = RIA.rw0;
-            gamepad[i].lx = RIA.rw0;
-            gamepad[i].ly = RIA.rw0;
-            gamepad[i].rx = RIA.rw0;
-            gamepad[i].ry = RIA.rw0;
-            gamepad[i].l2 = RIA.rw0;
-            gamepad[i].r2 = RIA.rw0;
-        }
-        
-        // Check if B button and ENTER are both released
-        if (!(gamepad[0].btn0 & GP_BTN_B) && !key(KEY_ENTER)) {
-            break;  // Button released, safe to exit
+        if (!is_action_pressed(0, ACTION_FIRE)) {
+            break; 
         }
     }
     
-    // Clear the message
+    // Clear the message area
     clear_rect(center_x - 45, center_y, 150, 25);
 }
 
@@ -197,10 +145,10 @@ void show_game_over(void)
     // Start end music
     start_end_music();
     
-    // Move all active fighters offscreen
+    // Move entities offscreen
     move_fighters_offscreen();
-
     move_sbullets_offscreen();
+    move_ebullets_offscreen();
     
     // Move all bullets offscreen
     for (uint8_t i = 0; i < MAX_BULLETS; i++) {
@@ -211,18 +159,15 @@ void show_game_over(void)
             bullets[i].status = -1;
         }
     }
-    
-    // Move all enemy bullets offscreen
-    move_ebullets_offscreen();
-    
-    // Reset player position to center
-    reset_player_position();
 
     // reset power-up state
     powerup.active = false;
     // Move power-up sprite offscreen
     xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, x_pos_px, -100);
     xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, y_pos_px, -100);
+
+    // Reset player position to center
+    reset_player_position();
     
     // Check if player got a high score
     int8_t high_score_pos = check_high_score(game_score);
@@ -240,94 +185,60 @@ void show_game_over(void)
     
     // Draw "GAME OVER" message
     draw_text(center_x, 70, "GAME OVER", red_color);
-    draw_text(center_x - 30, 90, "HIT B TO CONTINUE", red_color);
+    draw_text(center_x - 30, 90, "PRESS FIRE TO CONTINUE", red_color);
     
     printf("\n*** GAME OVER ***\n");
     printf("Final Level: %d\n", game_level);
     printf("Final Score: %d\n", game_score);
     
     uint8_t vsync_last = RIA.vsync;
-    bool fire_button_released = false;
-    // Timeout for waiting for fire button
-    unsigned timeout_frames = 30 * 60; // 30 seconds at 60Hz
+    bool fire_initially_released = false;
+    
+    unsigned timeout_frames = 30 * 60; // 30 seconds
     unsigned frame_count = 0;
-    // Wait for fire button
-    while (true) {
+
+    while (frame_count < timeout_frames) {
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
 
-        frame_count++; // Increment frame count
-
-        if (frame_count >= timeout_frames) {
-            printf("Timeout reached - continuing...\n");
-            
-            // Stop end music before returning to title screen
-            stop_music();
-            
-            // Clear screen before returning to title screen
-            RIA.addr0 = 0;
-            RIA.step0 = 1;
-            for (unsigned i = vlen; i--;) {
-                RIA.rw0 = 0;
-            }
-            
-            return;
-        }
-        
-        // Update music
+        frame_count++;
         update_music();
         
-        // Read gamepad input
-        RIA.addr0 = GAMEPAD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < GAMEPAD_COUNT; i++) {
-            gamepad[i].dpad = RIA.rw0;
-            gamepad[i].sticks = RIA.rw0;
-            gamepad[i].btn0 = RIA.rw0;
-            gamepad[i].btn1 = RIA.rw0;
-            gamepad[i].lx = RIA.rw0;
-            gamepad[i].ly = RIA.rw0;
-            gamepad[i].rx = RIA.rw0;
-            gamepad[i].ry = RIA.rw0;
-            gamepad[i].l2 = RIA.rw0;
-            gamepad[i].r2 = RIA.rw0;
-        }
+        // Update inputs
+        handle_input();
         
-        // Read keyboard
-        RIA.addr0 = KEYBOARD_INPUT;
-        RIA.step0 = 1;
-        for (uint8_t i = 0; i < KEYBOARD_BYTES; i++) {
-            keystates[i] = RIA.rw0;
-        }
+        bool fire_pressed = is_action_pressed(0, ACTION_FIRE);
         
-        // Check if fire button is released first
-        bool fire_pressed = key(KEY_SPACE) ||
-                           (gamepad[0].btn0 & GP_BTN_B);    // C
-        
+        // Logic: Wait for the button to be released at least once...
         if (!fire_pressed) {
-            fire_button_released = true;
-        } else if (fire_button_released) {
-            // Fire button pressed after being released
+            fire_initially_released = true;
+        } 
+        // ...then wait for it to be pressed again.
+        else if (fire_initially_released) {
             printf("Fire button pressed - continuing...\n");
-            
-            // Stop end music before returning to title screen
-            stop_music();
-            
-            // Clear screen before returning to title screen
-            RIA.addr0 = 0;
-            RIA.step0 = 1;
-            for (unsigned i = vlen; i--;) {
-                RIA.rw0 = 0;
-            }
-            
-            return;
+            break; // Exit loop
         }
         
-        // Check for ESC to exit
+        // Check Global Exit
         if (key(KEY_ESC)) {
             printf("ESC pressed - exiting...\n");
-            exit(0);
+            stop_music();
+            exit(0); // Or break to return to title
         }
+    }
+    
+    // 5. Cleanup and Return
+    if (frame_count >= timeout_frames) {
+        printf("Timeout reached - continuing...\n");
+    }
+
+    stop_music();
+    
+    // Fast Screen Clear (Wipe VRAM)
+    RIA.addr0 = 0;
+    RIA.step0 = 1;
+    for (unsigned i = vlen; i--;) {
+        RIA.rw0 = 0;
     }
 }
