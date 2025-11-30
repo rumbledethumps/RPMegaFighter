@@ -1,7 +1,7 @@
 # Mega Super Fighter Challenge
 for the [Picocomputer 6502](https://picocomputer.github.io/)
 
-Download the latest rom: [2025.11.29/v0.5](https://github.com/jasonfrowe/RPMegaFighter/releases/download/v0.5/rpmegafighterv05.rp6502)
+Download the latest rom: [2025.11.29/v0.6](https://github.com/jasonfrowe/RPMegaFighter/releases/download/v0.6/rpmegafighterv06.rp6502)
 
 ## Overview
 Dive into an epic space battle where you are the
@@ -26,7 +26,7 @@ backward or slow down.
 
 **Weapons and Abilities**
 - **A Button:** Main gun (primary weapon).
-- **X Button:** Spread gun (slow fire rate, additional firepower).
+- **X Button:** Spread gun (slow fire rate, limited range).
 
 Press **START** to PAUSE the game.
 
@@ -73,7 +73,11 @@ fighters at close and far range.
 The **X** button fires a spread shot of 3 projectiles.
 It is very effective against close-by enemies and
 enemies travelling in packs. It has a much slower
-rate of fire.
+rate of fire.  
+
+Look for **Power Ups** that appear after destroying enemies. 
+These power ups will enhance your weapon system to deal
+with the hoard of enemies.
 
 ## Levels
 As you progress through levels, the difficulty
