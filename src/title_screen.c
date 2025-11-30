@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "graphics.h"
+#include "random.h"
 #include "usb_hid_keys.h"
 // #include "demo.h"
 
@@ -92,6 +93,9 @@ void show_title_screen(void)
         if (RIA.vsync == vsync_last)
             continue;
         vsync_last = RIA.vsync;
+
+        // Increment seed counter for randomness
+        seed_counter++;
 
         // Update high score display periodically to rotate colours
         highscore_counter++;
@@ -189,6 +193,11 @@ void show_title_screen(void)
                         break;
                     }
                 }
+
+                // Initialize LFSR seed based on time spent on title screen
+                lfsr = seed_counter;
+                if (lfsr == 0) lfsr = 0xACE1; // Seed must never be 0
+                printf("LFSR initialized with seed: 0x%04X\n", lfsr);
                 
                 return;  // Exit title screen
             }

@@ -113,14 +113,34 @@ void init_fighters(void)
         fighters[i].anim_timer = 0; // Initialize animation timer
         set_fighter_frame(i, 0); // Points back to the first image in the sheet (Normal ship)
         
-        fighters[i].x = random(SCREEN_WIDTH_D2, SCREEN_WIDTH) + SCREEN_WIDTH + 144;
-        fighters[i].y = random(SCREEN_HEIGHT_D2, SCREEN_HEIGHT) + SCREEN_HEIGHT + 104;
+        // fighters[i].x = random(SCREEN_WIDTH_D2, SCREEN_WIDTH) + SCREEN_WIDTH + 144;
+        // fighters[i].y = random(SCREEN_HEIGHT_D2, SCREEN_HEIGHT) + SCREEN_HEIGHT + 104;
         
-        if (random(0, 1)) {
-            fighters[i].x = -fighters[i].x;
-        }
-        if (random(0, 1)) {
-            fighters[i].y = -fighters[i].y;
+        // if (random(0, 1)) {
+        //     fighters[i].x = -fighters[i].x;
+        // }
+        // if (random(0, 1)) {
+        //     fighters[i].y = -fighters[i].y;
+        // }
+
+        uint8_t edge = random(0, 4);  // 0=right, 1=left, 2=top, 3=bottom
+                
+        if (edge == 0) {
+            // Spawn on right edge
+            fighters[i].x = SCREEN_WIDTH + random(70, 150);
+            fighters[i].y = random(20, SCREEN_HEIGHT - 20);
+        } else if (edge == 1) {
+            // Spawn on left edge
+            fighters[i].x = -random(70, 150);
+            fighters[i].y = random(20, SCREEN_HEIGHT - 20);
+        } else if (edge == 2) {
+            // Spawn on top edge
+            fighters[i].x = random(20, SCREEN_WIDTH - 20);
+            fighters[i].y = SCREEN_HEIGHT + random(70, 150);
+        } else {
+            // Spawn on bottom edge
+            fighters[i].x = random(20, SCREEN_WIDTH - 20);
+            fighters[i].y = -random(70, 150);
         }
         
         fighters[i].vx_rem = 0;
