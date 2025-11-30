@@ -174,10 +174,10 @@ void update_sbullets(void)
         // Check collision with fighters before moving
         if (check_bullet_fighter_collision(sbullets[i].x, sbullets[i].y, &player_score, &game_score)) {
             // Hit a fighter - deactivate bullet
-            sbullets[i].status = -1;
-            unsigned ptr = SBULLET_CONFIG + i * sizeof(vga_mode4_sprite_t);
-            xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);
-            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+            // sbullets[i].status = -1;
+            // unsigned ptr = SBULLET_CONFIG + i * sizeof(vga_mode4_sprite_t);
+            // xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);
+            // xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
             continue;
         }
         
