@@ -289,6 +289,7 @@ bool save_joystick_config(void)
  * Quick interactive input test: stays running until PAUSE action (START) is pressed.
  * Reports mapped action press/release events for player 0 only.
  */
+#ifdef INPUT_TEST
 void init_input_system_test(void)
 {
     printf("\nInput test mode: press mapped gamepad buttons to see actions.\n");
@@ -357,3 +358,4 @@ void init_input_system_test(void)
         }
     }
 }
+#endif // INPUT_TEST

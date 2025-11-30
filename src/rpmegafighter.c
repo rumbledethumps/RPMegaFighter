@@ -644,7 +644,9 @@ int main(void)
     // Main game loop - includes title screen and gameplay
     while (true) {
         // Run the input test (non-destructive) then show title screen
+    #ifdef INPUT_TEST
         init_input_system_test();
+    #endif
 
         // Show title screen and wait for START
         show_title_screen();

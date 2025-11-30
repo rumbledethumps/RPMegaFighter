@@ -73,7 +73,9 @@ extern ButtonMapping button_mappings[GAMEPAD_COUNT][ACTION_COUNT];
 void init_input_system(void);
 
 // Quick interactive input test: reports mapped action press/releases and exits on PAUSE
+#ifdef INPUT_TEST
 void init_input_system_test(void);
+#endif
 
 // Read keyboard and gamepad input
 void handle_input(void);

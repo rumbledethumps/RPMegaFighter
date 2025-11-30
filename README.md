@@ -99,3 +99,26 @@ victory.
 - **Developer:** Jason Rowe
   - email: jason@jasonrowe.org
 - **Release Date:** Alpha - 2025-11-22
+
+## Build Option: ENABLE_INPUT_TEST
+
+The project includes a small, optional interactive input test (`init_input_system_test()`) that helps exercise and verify gamepad/button mappings at startup. This test is not compiled into the default build.
+
+- Default: `ENABLE_INPUT_TEST` is **OFF**.
+- When enabled, the test is compiled into the `rpmegafighter` binary and runs once at startup; it prints mapped action press/release events for player 0 and exits when the PAUSE/START action is pressed.
+
+To enable the test for a local build, configure CMake with the option enabled and then build:
+
+```bash
+cmake -B build -DENABLE_INPUT_TEST=ON
+cmake --build build
+```
+
+To disable the test, omit the option (the default) or explicitly set it to `OFF`:
+
+```bash
+cmake -B build -DENABLE_INPUT_TEST=OFF
+cmake --build build
+```
+
+The CMake option is implemented as `ENABLE_INPUT_TEST` and adds the `INPUT_TEST` compile definition to the `rpmegafighter` target when ON.

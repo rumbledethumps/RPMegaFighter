@@ -18,6 +18,17 @@ endif()
 add_executable(rpmegafighter)
  # Prefer size-optimized compilation for this embedded project
 target_compile_options(rpmegafighter PRIVATE -Os)
+
+# Option to enable compile-time input test (define INPUT_TEST)
+# Set this ON to compile the interactive `init_input_system_test()` into the
+# `rpmegafighter` target. Default is OFF for production builds.
+option(ENABLE_INPUT_TEST "Enable compilation of the input system test (define INPUT_TEST)" OFF)
+if(ENABLE_INPUT_TEST)
+    target_compile_definitions(rpmegafighter PRIVATE INPUT_TEST)
+    message(STATUS "ENABLE_INPUT_TEST=ON — compiling input test into rpmegafighter")
+else()
+    message(STATUS "ENABLE_INPUT_TEST=OFF")
+endif()
 rp6502_asset(rpmegafighter 0x1E100 images/spaceship2.bin)
 rp6502_asset(rpmegafighter 0x1E180 images/Earth.bin)
 rp6502_asset(rpmegafighter 0x1E980 images/fighter.bin)
