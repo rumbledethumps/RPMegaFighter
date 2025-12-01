@@ -6,9 +6,6 @@
 #include "constants.h"
 #include <string.h>
 
-static int16_t dx = 0;   // scrolling of visible screen relative to World map
-static int16_t dy = 0;
-
 //Sprite locations
 #define SPACESHIP_DATA  0xE100  //Spaceship Sprite (8x8)
 #define EARTH_DATA      0xE180  //Earth Sprite (32x32)
@@ -33,13 +30,6 @@ unsigned BULLET_CONFIG;         //Player bullet sprite config
 unsigned SBULLET_CONFIG;        //Super bullet sprite config
 unsigned TEXT_CONFIG;           //On screen text configs
 
-// Star arrays (defined here, declared in bkgstars.h)
-int16_t star_x[32] = {0};
-int16_t star_y[32] = {0};
-int16_t star_x_old[32] = {0};
-int16_t star_y_old[32] = {0};
-uint8_t star_colour[32] = {0};
-
 // Text configs
 #define NTEXT 1
 unsigned text_message_addr;
@@ -49,13 +39,6 @@ static char score_value[6] = "00000";
 #define MESSAGE_HEIGHT 2
 #define MESSAGE_LENGTH (MESSAGE_WIDTH * MESSAGE_HEIGHT)
 static char message[MESSAGE_LENGTH]; 
-
-static inline void definitions_init_message(void) {
-    memset(message, ' ', sizeof message);
-}
-
-static uint16_t score = 0;
-
 static char level_message[5] = "LEVEL";
 
 // (Block palette constants moved to constants.h)
@@ -88,7 +71,3 @@ const int16_t t2_fix4[] = {
     2408, 2264, 2032, 1736, 1384, 1016, 640, 288, 0, -232, 
     -376, -432, -376, -232, 0
 };
-
-// Earth center position constants
-static int16_t earth_xc = SCREEN_WIDTH/2;
-static int16_t earth_yc = SCREEN_HEIGHT/2;

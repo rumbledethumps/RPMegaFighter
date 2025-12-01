@@ -7,6 +7,13 @@
 #include "random.h"
 #include "graphics.h"
 
+// Star arrays (defined here, declared in bkgstars.h)
+int16_t star_x[32] = {0};
+int16_t star_y[32] = {0};
+int16_t star_x_old[32] = {0};
+int16_t star_y_old[32] = {0};
+uint8_t star_colour[32] = {0};
+
 void init_stars(void) 
 {
     for (uint8_t i = 0; i < NSTAR; i++) {

@@ -11,12 +11,13 @@ find_package(llvm-mos-sdk REQUIRED)
 project(RPMegaFighter C CXX ASM)
 
 # Default to size-optimized build for embedded target unless user specified
+# We can also try Release, but Minsizerel is more focused on size
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Minsizerel CACHE STRING "Choose the type of build" FORCE)
 endif()
 
 add_executable(rpmegafighter)
- # Prefer size-optimized compilation for this embedded project
+# Prefer size-optimized compilation for this embedded project
 target_compile_options(rpmegafighter PRIVATE -Os)
 
 # Option to enable compile-time input test (define INPUT_TEST)

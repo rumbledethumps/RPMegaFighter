@@ -4,13 +4,6 @@
 #include <stdint.h>
 #include "constants.h"
 
-// Star position and color arrays
-extern int16_t star_x[NSTAR];      // X-position -- World coordinates
-extern int16_t star_y[NSTAR];      // Y-position -- World coordinates
-extern int16_t star_x_old[NSTAR];  // prev X-position -- World coordinates
-extern int16_t star_y_old[NSTAR];  // prev Y-position -- World coordinates
-extern uint8_t star_colour[NSTAR]; // Colour
-
 // Initialize the background star field
 void init_stars(void);
 
