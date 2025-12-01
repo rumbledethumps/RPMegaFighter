@@ -18,7 +18,7 @@ endif()
 
 add_executable(rpmegafighter)
 # Prefer size-optimized compilation for this embedded project
-target_compile_options(rpmegafighter PRIVATE -Os)
+# target_compile_options(rpmegafighter PRIVATE -Os)
 
 # Option to enable compile-time input test (define INPUT_TEST)
 # Set this ON to compile the interactive `init_input_system_test()` into the
