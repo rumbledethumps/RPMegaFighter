@@ -121,7 +121,7 @@ void draw_high_scores(void)
 
     // Draw title with animated color
     uint8_t title_color = color_cycle[(frame / 8) % color_cycle_len];
-    draw_text(start_x + 23 , start_y, "HIGH SCORES", title_color);
+    draw_text(start_x + 23 , start_y + 3, "HIGH SCORES", title_color);
 
     // Draw each score with animated color cycling
     for (uint8_t i = 0; i < MAX_HIGH_SCORES; i++) {
