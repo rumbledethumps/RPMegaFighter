@@ -10,7 +10,7 @@
 
 extern void draw_text(uint16_t x, uint16_t y, const char *str, uint8_t colour);
 
-void load_file_to_xram(const char *filename, unsigned address) {
+void load_palette_to_xram(const char *filename, unsigned address) {
     int fd = open(filename, O_RDONLY);
     if (fd < 0) {
         printf("Error: Could not open %s\n", filename);
@@ -31,13 +31,43 @@ void load_file_to_xram(const char *filename, unsigned address) {
     close(fd);
 }
 
+void load_file_to_xram(const char *filename, unsigned address) {
+    int fd = open(filename, O_RDONLY);
+    if (fd < 0) {
+        printf("Error: Could not open %s\n", filename);
+        return;
+    }
+
+    // We must read in chunks because read_xram has a limit of 0x7FFF (32KB)
+    // 16KB chunks are safe and aligned
+    unsigned chunk_size = 16384; 
+    unsigned current_addr = address;
+    int bytes_read;
+
+    do {
+        // Correct Order: (Destination XRAM Addr, Byte Count, File Descriptor)
+        bytes_read = read_xram(current_addr, chunk_size, fd);
+        
+        if (bytes_read > 0) {
+            current_addr += bytes_read;
+        }
+        
+    } while (bytes_read == chunk_size); // Keep going if we filled the chunk
+
+    if (bytes_read < 0) {
+        printf("Error: Failed to load %s (Err: %d)\n", filename, bytes_read);
+    }
+
+    close(fd);
+}
+
 void show_splash_screen(void) {
     const uint8_t red_color = 0x03;
     const uint16_t center_x = 110;
 
     // 1. Load the Palette to Free Space (0xF000)
     // The palette file is 512 bytes (256 colors * 2 bytes)
-    load_file_to_xram("title_screen_pal.bin", 0xF000);
+    load_palette_to_xram("title_screen_pal.bin", 0xF000);
 
     // 2. Load the Bitmap Indices to Background (0x0000)
     load_file_to_xram("title_screen.bin", 0x0000);
