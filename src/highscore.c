@@ -121,12 +121,15 @@ void draw_high_scores(void)
 
     // Draw title with animated color
     uint8_t title_color = color_cycle[(frame / 8) % color_cycle_len];
-    draw_text(start_x, start_y, "HIGH SCORES", title_color);
+    draw_text(start_x + 20 , start_y, "HIGH SCORES", title_color);
 
     // Draw each score with animated color cycling
     for (uint8_t i = 0; i < MAX_HIGH_SCORES; i++) {
         uint16_t y = start_y + 15 + (i * 8);
-        uint8_t row_color = color_cycle[(frame / 8 + i) % color_cycle_len];
+        // uint8_t row_color = color_cycle[(frame / 8 + i) % color_cycle_len];
+        uint8_t base_idx = 32;
+        uint8_t offset = (frame + (i * 10)) % 224; // Speed and spacing
+        uint8_t row_color = base_idx + offset;
 
         // Draw rank number
         char rank[3];
@@ -138,10 +141,10 @@ void draw_high_scores(void)
             rank[0] = '1' + i;
             rank[1] = '\0';
         }
-        draw_text(start_x, y, rank, row_color);
+        draw_text(start_x + 20, y, rank, row_color);
 
         // Draw name
-        draw_text(start_x + 10, y, high_scores[i].name, row_color);
+        draw_text(start_x + 30, y, high_scores[i].name, row_color);
 
         // Draw score (5 digits)
         char score_buf[6];
@@ -151,7 +154,7 @@ void draw_high_scores(void)
         score_buf[3] = '0' + (high_scores[i].score / 10) % 10;
         score_buf[4] = '0' + high_scores[i].score % 10;
         score_buf[5] = '\0';
-        draw_text(start_x + 30, y, score_buf, row_color);
+        draw_text(start_x + 50, y, score_buf, row_color);
     }
 }
 

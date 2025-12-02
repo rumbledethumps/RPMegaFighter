@@ -458,12 +458,12 @@ void render_fighters(void)
 void move_fighters_offscreen(void)
 {
     for (uint8_t i = 0; i < MAX_FIGHTERS; i++) {
-        if (fighters[i].status > 0) {
+        // if (fighters[i].status > 0) {
             unsigned ptr = FIGHTER_CONFIG + i * sizeof(vga_mode4_sprite_t);
             xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);
             xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
             fighters[i].status = 0;
-        }
+        // }
     }
 }
 

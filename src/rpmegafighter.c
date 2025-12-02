@@ -32,6 +32,7 @@
 #include "screens.h"
 #include "powerup.h"
 #include "bomber.h"
+#include "splash_screen.h"
 
 // ============================================================================
 // XRAM MEMORY CONFIGURATION ADDRESSES
@@ -109,7 +110,7 @@ static void init_graphics(void)
     xram0_struct_set(BITMAP_CONFIG, vga_mode3_config_t, width_px, 320);
     xram0_struct_set(BITMAP_CONFIG, vga_mode3_config_t, height_px, 180);
     xram0_struct_set(BITMAP_CONFIG, vga_mode3_config_t, xram_data_ptr, 0);
-    xram0_struct_set(BITMAP_CONFIG, vga_mode3_config_t, xram_palette_ptr, 0xFFFF);
+    xram0_struct_set(BITMAP_CONFIG, vga_mode3_config_t, xram_palette_ptr, 0xF000); // 0xFFFF);
     
     // Enable Mode 3 bitmap (4-bit color)
     xregn(1, 0, 1, 4, 3, 3, BITMAP_CONFIG, 1);
@@ -422,6 +423,37 @@ void render_game(void)
 
 }
 
+void hide_all_sprites(void)
+{
+    // 1. Hide Player
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, y_pos_px, -100);
+
+    // 2. Hide Special Objects
+    xram0_struct_set(POWERUP_CONFIG, vga_mode4_sprite_t, y_pos_px, -100);
+    xram0_struct_set(BOMBER_CONFIG, vga_mode4_sprite_t, y_pos_px, -100);
+    // xram0_struct_set(MARKER_CONFIG, vga_mode4_sprite_t, y_pos_px, -100);
+
+    // 3. Hide Swarms
+    // (We reuse the helpers you likely wrote for show_game_over, 
+    //  or we manually loop if those don't exist)
+    
+    move_fighters_offscreen();
+    move_ebullets_offscreen();
+    move_sbullets_offscreen();
+
+    // 4. Hide Player Bullets (Manual loop just in case)
+    size_t sprite_size = sizeof(vga_mode4_sprite_t);
+    for (uint8_t i = 0; i < MAX_BULLETS; i++) {
+        unsigned ptr = BULLET_CONFIG + (i * sprite_size);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+    }
+
+    // Reset Earth position
+    earth_x = SCREEN_WIDTH / 2;
+    earth_y = SCREEN_HEIGHT / 2;
+
+}
+
 // ============================================================================
 // MAIN GAME LOOP
 // ============================================================================
@@ -471,6 +503,8 @@ int main(void)
         init_input_system_test();
     #endif
 
+        show_splash_screen();
+        
         // Show title screen and wait for START
         show_title_screen();
 
@@ -609,10 +643,18 @@ int main(void)
             // Demo Overlay Rendering (Kept at bottom to draw on top)
             if (demo_mode_active) {
                 // Update demo text color and text only every 20 frames
-                if ((demo_frames % 20) == 0) {
-                    uint8_t demo_color = demo_colors[(demo_frames / 20) % num_demo_colors];
+                if ((demo_frames % 20) == 0) {  
+                    // Use the new Rainbow Palette (Indices 32-255)
+                    // The spectrum has 224 colors.
+                    // Since this runs every 20 frames, the color index jumps by 20 each update,
+                    // creating a noticeable shift (like a slow strobe) rather than a smooth gradient.
+                    uint8_t demo_color = 32 + (demo_frames % 224);
+        
                     draw_text(SCREEN_WIDTH / 2 - 23, 25, "DEMO MODE", demo_color);
-                    draw_text(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT - 15, "PRESS FIRE TO EXIT", demo_color);
+                    
+                    // "PRESS FIRE TO EXIT" is approx 72px wide. 
+                    // 160 (Center) - 36 (Half width) = 124. 
+                    draw_text(124, SCREEN_HEIGHT - 15, "PRESS FIRE TO EXIT", demo_color);
                 }
 
                 if (demo_frames >= DEMO_DURATION_FRAMES) {
@@ -662,6 +704,8 @@ int main(void)
             }
         }
     // Gameplay loop ended - will return to title screen
+        hide_all_sprites();
+        printf("Game/Demo Finished. Resetting...\n");
     }
     
     // Should never reach here unless ESC pressed

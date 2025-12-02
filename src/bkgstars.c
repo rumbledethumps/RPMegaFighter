@@ -20,7 +20,7 @@ void init_stars(void)
         star_x[i] = random(1, STARFIELD_X);
         // Keep stars away from HUD area (top 10 pixels)
         star_y[i] = random(11, STARFIELD_Y);
-        star_colour[i] = random(1, 255);
+        star_colour[i] = random(32, 255);
         star_x_old[i] = star_x[i];
         star_y_old[i] = star_y[i];
     }

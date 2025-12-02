@@ -194,6 +194,6 @@ extern unsigned BOMBER_CONFIG;      // Bomber Sprite (8x8)
 #define LEVEL_MESSAGE_LENGTH 10
 
 // Demo configuration
-#define DEMO_DURATION_FRAMES (60 * 40) // 40 seconds
+#define DEMO_DURATION_FRAMES (60 * 40) // Frames for demo mode (40 seconds)
 
 #endif // CONSTANTS_H

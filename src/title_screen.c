@@ -33,25 +33,25 @@ void show_title_screen(void)
     // Start title music
     start_title_music();
     
-    // Clear screen
-    RIA.addr0 = 0;
-    RIA.step0 = 1;
-    for (unsigned i = vlen; i--;) {
-        RIA.rw0 = 0;
-    }
+    // // Clear screen
+    // RIA.addr0 = 0;
+    // RIA.step0 = 1;
+    // for (unsigned i = vlen; i--;) {
+    //     RIA.rw0 = 0;
+    // }
     
     // Draw title text
-    draw_text(center_x, 40, "MEGA", red_color);
-    draw_text(center_x, 55, "SUPER", red_color);
-    draw_text(center_x, 70, "FIGHTER", red_color);
-    draw_text(center_x, 85, "CHALLENGE", blue_color);
+    // draw_text(center_x, 40, "MEGA", red_color);
+    // draw_text(center_x, 55, "SUPER", red_color);
+    // draw_text(center_x, 70, "FIGHTER", red_color);
+    // draw_text(center_x, 85, "CHALLENGE", blue_color);
     
     // Draw high scores on right side
     draw_high_scores();
     
     uint8_t vsync_last = RIA.vsync;
     // Demo idle detection (frames)
-    const unsigned DEMO_IDLE_FRAMES = 10 * 60; // 10 seconds
+    const unsigned DEMO_IDLE_FRAMES = 60 * 60; // 60 seconds
     unsigned idle_frames = 0;
     uint16_t flash_counter = 0;
     bool press_start_visible = true;
@@ -59,7 +59,7 @@ void show_title_screen(void)
     uint8_t current_color = red_color;
     
     // Draw initial "PRESS START" text
-    draw_text(center_x, 110, "PRESS START", red_color);
+    // draw_text(center_x, 110, "PRESS START", red_color);
     
     // Draw exit instruction
     // draw_text(center_x - 30, 130, "PUSH A+Y TO EXIT", blue_color);
@@ -168,19 +168,42 @@ void show_title_screen(void)
         }
         
         // Flash "PRESS START" every 5 seconds
+        // flash_counter++;
+        // if (flash_counter >= flash_interval) {
+        //     flash_counter = 0;
+        //     press_start_visible = !press_start_visible;
+            
+        //     if (press_start_visible) {
+        //         // Alternate color between red and blue
+        //         current_color = (current_color == red_color) ? blue_color : red_color;
+        //         draw_text(center_x - 10, 100, "PRESS START", current_color);
+        //     } else {
+        //         // Clear the text
+        //         clear_rect(center_x - 10, 100, 43, 5);
+        //     }
+        // }
         flash_counter++;
         if (flash_counter >= flash_interval) {
             flash_counter = 0;
             press_start_visible = !press_start_visible;
             
-            if (press_start_visible) {
-                // Alternate color between red and blue
-                current_color = (current_color == red_color) ? blue_color : red_color;
-                draw_text(center_x, 110, "PRESS START", current_color);
-            } else {
-                // Clear the text
-                clear_rect(center_x, 110, 120, 5);
-            }
+            // if (!press_start_visible) {
+            //     // Clear the text area immediately when turning off
+            //     // "PRESS START" is 11 chars * 4px width = 44px
+            //     clear_rect(center_x - 10, 100, 44, 5);
+            // }
         }
+
+        // 2. Render Text (Rainbow Cycle)
+        if (press_start_visible) {
+            // Calculate Rainbow Color
+            // Range: 32 to 255 (224 colors)
+            // Use seed_counter (which increments every frame) to drive the cycle
+            uint8_t rainbow_color = 32 + (seed_counter % 224);
+            
+            // Draw text with the new color
+            draw_text(center_x - 10, 100, "PRESS START", rainbow_color);
+        }
+
     }
 }
