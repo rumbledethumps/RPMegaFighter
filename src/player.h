@@ -9,6 +9,9 @@ extern int16_t player_y;
 extern int16_t scroll_dx;
 extern int16_t scroll_dy;
 
+extern bool player_is_dying;
+void trigger_player_death(void);
+
 /**
  * Initialize player state at game start
  */

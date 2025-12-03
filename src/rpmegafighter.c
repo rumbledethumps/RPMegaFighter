@@ -34,6 +34,7 @@
 #include "bomber.h"
 #include "splash_screen.h"
 #include "asteroids.h"
+#include "explosions.h"
 
 // ============================================================================
 // XRAM MEMORY CONFIGURATION ADDRESSES
@@ -55,6 +56,7 @@ unsigned POWERUP_CONFIG;        // Powerup sprite config
 unsigned BOMBER_CONFIG;         // Bomber Sprite (8x8)
 unsigned ASTEROID_M_CONFIG;     // Asteroid M Config
 unsigned ASTEROID_S_CONFIG;     // Asteroid S Config
+unsigned EXPLOSION_CONFIG;      // Explosion sprite configs
 
 // ============================================================================
 // GAME STRUCTURES
@@ -101,6 +103,10 @@ static bool game_over = false;
 extern void init_asteroids(void);
 extern void update_asteroids(void);
 extern void spawn_asteroid_wave(int level);
+
+//Explosion functions
+extern void init_explosions(void);
+extern void update_explosions(void);
 
 // ============================================================================
 // GRAPHICS INITIALIZATION
@@ -270,13 +276,24 @@ static void init_graphics(void)
         xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
     }
 
+    EXPLOSION_CONFIG = ASTEROID_S_CONFIG + COUNT_ASTEROID_S * sizeof(vga_mode4_sprite_t);
+    for (uint8_t i = 0; i < MAX_EXPLOSIONS; i++) {
+        unsigned ptr = EXPLOSION_CONFIG + i * sizeof(vga_mode4_sprite_t);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);  // Start offscreen
+        xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, xram_sprite_ptr, EXPLOSION_DATA);
+        xram0_struct_set(ptr, vga_mode4_sprite_t, log_size, 4);  // 16x16 sprite (2^4)
+        xram0_struct_set(ptr, vga_mode4_sprite_t, has_opacity_metadata, false);
+    }
+
     // Enable sprite modes:
     // Then enable affine sprites (player) - 1 sprite at SPACECRAFT_CONFIG
     xregn(1, 0, 1, 7, 4, 1, SPACECRAFT_CONFIG, 1 + COUNT_ASTEROID_L, 2, 10, 180);
     // First enable Earth sprite (background layer)
     xregn(1, 0, 1, 5, 4, 0, EARTH_CONFIG, 1, 0);
     // Finally enable regular sprites (fighters + ebullets + bullets + sbullets + power ups + bomber + 2 x asteroids) - all regular sprites in one call
-    xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS + MAX_SBULLETS + 2 + COUNT_ASTEROID_M + COUNT_ASTEROID_S, 1);
+    xregn(1, 0, 1, 5, 4, 0, FIGHTER_CONFIG, MAX_FIGHTERS + MAX_EBULLETS + MAX_BULLETS + 
+        MAX_SBULLETS + 2 + COUNT_ASTEROID_M + COUNT_ASTEROID_S + MAX_EXPLOSIONS, 1);
 
 
 
@@ -288,7 +305,7 @@ static void init_graphics(void)
 
     // Enable text mode for on-screen messages
 
-    TEXT_CONFIG = ASTEROID_S_CONFIG + COUNT_ASTEROID_S * sizeof(vga_mode4_sprite_t); // 0xEC32; //Config address for text mode
+    TEXT_CONFIG = EXPLOSION_CONFIG + MAX_EXPLOSIONS * sizeof(vga_mode4_sprite_t); // 0xEC32; //Config address for text mode
     // Place text message data immediately after text config entries
     text_message_addr = TEXT_CONFIG + NTEXT * sizeof(vga_mode1_config_t); // 0xEC42; // address to store text message
 
@@ -445,6 +462,7 @@ static void init_game(void)
     init_fighters();
     init_asteroids();
     init_stars();
+    init_explosions();
 
     // Reset Earth position
     earth_x = SCREEN_WIDTH / 2;
@@ -681,12 +699,14 @@ int main(void)
             
             // Handle player fire buttons
             // Regular bullets: keyboard SPACE or gamepad A button (0x01)
-            if (is_action_pressed(0, ACTION_FIRE) || (demo_mode_active)) {
+            // if (is_action_pressed(0, ACTION_FIRE) || (demo_mode_active)) {
+            if (!player_is_dying && (is_action_pressed(0, ACTION_FIRE) || demo_mode_active)) {
                 fire_bullet();
             }
             
             // Super bullets: keyboard Left Shift or gamepad X button (0x08)
-            if (is_action_pressed(0, ACTION_SUPER_FIRE) || (demo_mode_active)) {
+            // if (is_action_pressed(0, ACTION_SUPER_FIRE) || (demo_mode_active)) {
+            if (!player_is_dying && (is_action_pressed(0, ACTION_SUPER_FIRE) || demo_mode_active)) {
                 fire_sbullet(get_player_rotation());
             }
             
@@ -699,6 +719,12 @@ int main(void)
             // update_bomber();
             spawn_asteroid_wave(game_level);
             update_asteroids();
+            update_explosions();
+
+            // Only check if playing (not demo) and not already game over
+            if (!demo_mode_active && !game_over) {
+                check_player_asteroid_collision(player_x, player_y);
+            }
 
             // Update scrolling based on player movement
             update_powerup();

@@ -255,13 +255,15 @@ void update_fighters(void)
         }
 
         // Inside update_fighters
-        if (check_asteroid_hit_fighter(fighters[i].x, fighters[i].y)) {
-            fighters[i].status = 0;
-            active_fighter_count--;
-            // enemy_score += 2;
-            fighters[i].is_exploding = true; // Start explosion sequence
-            continue;
-            // Do not give player points? Or give points for "Environment Kill"?
+        if ((i % 4) == (game_frame % 4)) { 
+            if (check_asteroid_hit_fighter(fighters[i].x, fighters[i].y)) {
+                fighters[i].status = 0;
+                active_fighter_count--;
+                // enemy_score += 2;
+                fighters[i].is_exploding = true; // Start explosion sequence
+                continue;
+                // Do not give player points? Or give points for "Environment Kill"?
+            }
         }
         
         if (game_frame == 0) {

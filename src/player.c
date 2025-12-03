@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h> // added for printf debugging
+#include "explosions.h"
 
 // ============================================================================
 // TYPES
@@ -70,6 +71,10 @@ static uint16_t demo_thrust_hold = 0;
 // Bullet cooldown
 static uint16_t bullet_cooldown = 0;
 
+// Global State
+bool player_is_dying = false;
+static int death_timer = 0;
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -116,6 +121,18 @@ void init_player(void)
     player_thrust_delay = 0;
     player_thrust_count = 0;
     bullet_cooldown = 0;
+    player_is_dying = false;
+    death_timer = 0;
+}
+
+void trigger_player_death(void) {
+    if (player_is_dying) return; // Already dying
+    
+    player_is_dying = true;
+    death_timer = 180; // 3 Seconds @ 60fps
+    
+    // Hide the player sprite immediately
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, y_pos_px, -100);
 }
 
 void reset_player_position(void)
@@ -138,6 +155,26 @@ void update_player(bool demomode)
     bool rotate_left = false;
     bool rotate_right = false;
     bool thrust = false;
+
+    // --- 1. HANDLE DEATH SEQUENCE ---
+    if (player_is_dying) {
+        death_timer--;
+        
+        // Spawn a new explosion cluster every 10 frames
+        if (death_timer % 10 == 0) {
+            // Randomize location around the last known player position
+            int16_t ex = player_x + (int16_t)random(0, 40) - 20;
+            int16_t ey = player_y + (int16_t)random(0, 40) - 20;
+            start_explosion(ex, ey);
+        }
+
+        // When timer hits 0, trigger the actual Game Over
+        if (death_timer <= 0) {
+            enemy_score = 100; // This tells main() to end the game
+        }
+        
+        return; // Skip movement logic!
+    }
 
     // Handle player rotation
     player_rotation_frame++;

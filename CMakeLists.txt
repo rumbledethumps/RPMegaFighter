@@ -80,6 +80,7 @@ target_sources(rpmegafighter PRIVATE
     src/powerup.c
     src/bomber.c
     src/asteroids.c
+    src/explosions.c
 )
 
 # Gamepad test utility

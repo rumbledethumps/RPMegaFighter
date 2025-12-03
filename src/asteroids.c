@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <rp6502.h>
 #include <stdlib.h>
+#include "explosions.h"    // Needs start_explosion()   
+#include "text.h"           // For score display update
 
 // Rotation Tables (Reuse from player.c)
 extern const int16_t sin_fix[];
@@ -30,7 +32,11 @@ extern unsigned ASTEROID_L_CONFIG;
 extern unsigned ASTEROID_M_CONFIG;
 extern unsigned ASTEROID_S_CONFIG;
 
+
+extern void start_explosion(int16_t x, int16_t y);
+
 extern int16_t scroll_dx, scroll_dy;
+extern int player_score, enemy_score;
 
 // Asteroid World Boundaries
 #define AWORLD_PAD 100  // Extra padding beyond screen edges
@@ -297,29 +303,31 @@ bool check_asteroid_hit(int16_t bx, int16_t by) {
     for (int i = 0; i < MAX_AST_L; i++) {
         if (!ast_l[i].active) continue;
         
-        int16_t a_cx = ast_l[i].x + 16;
-        int16_t a_cy = ast_l[i].y + 16;
+        int16_t a_cx = ast_l[i].x + 16 - bx;
+        int16_t a_cy = ast_l[i].y + 16 - by;
 
         // Simple Box Check (Faster than distance calc)
-        if (abs(a_cx - bx) < 14 && abs(a_cy - by) < 14) {
-            ast_l[i].health--;
+        if (a_cx > -14 && a_cx < 14) {
+            if (a_cy > -14 && a_cy < 14) {
+                ast_l[i].health--;
             
-            if (ast_l[i].health <= 0) {
-                // DESTROY LARGE -> Spawn 2 Mediums
-                ast_l[i].active = false;
-                // start_explosion(ast_l[i].x, ast_l[i].y);
-                player_score += 5;
+                if (ast_l[i].health <= 0) {
+                    // DESTROY LARGE -> Spawn 2 Mediums
+                    ast_l[i].active = false;
+                    start_explosion(ast_l[i].x, ast_l[i].y);
+                    player_score += 5;
 
-                // Split velocities (diverge from parent)
-                // Parent velocity +/- 30 subpixels
-                spawn_child(AST_MEDIUM, ast_l[i].x, ast_l[i].y, ast_l[i].vx + 128, ast_l[i].vy - 128);
-                spawn_child(AST_MEDIUM, ast_l[i].x, ast_l[i].y, ast_l[i].vx - 128, ast_l[i].vy + 128);
-                
-                // Hide sprite immediately
-                unsigned ptr = ASTEROID_L_CONFIG + (i * sizeof(vga_mode4_asprite_t));
-                xram0_struct_set(ptr, vga_mode4_asprite_t, y_pos_px, -100);
+                    // Split velocities (diverge from parent)
+                    // Parent velocity +/- 30 subpixels
+                    spawn_child(AST_MEDIUM, ast_l[i].x, ast_l[i].y, ast_l[i].vx + 128, ast_l[i].vy - 128);
+                    spawn_child(AST_MEDIUM, ast_l[i].x, ast_l[i].y, ast_l[i].vx - 128, ast_l[i].vy + 128);
+                    
+                    // Hide sprite immediately
+                    unsigned ptr = ASTEROID_L_CONFIG + (i * sizeof(vga_mode4_asprite_t));
+                    xram0_struct_set(ptr, vga_mode4_asprite_t, y_pos_px, -100);
+                }
+                return true; // Bullet hit something
             }
-            return true; // Bullet hit something
         }
     }
 
@@ -327,26 +335,28 @@ bool check_asteroid_hit(int16_t bx, int16_t by) {
     for (int i = 0; i < MAX_AST_M; i++) {
         if (!ast_m[i].active) continue;
 
-        int16_t a_cx = ast_m[i].x + 8;
-        int16_t a_cy = ast_m[i].y + 8;
+        int16_t a_cx = ast_m[i].x + 8 - bx;
+        int16_t a_cy = ast_m[i].y + 8 - by;
         
-        if (abs(a_cx - bx) < 8 && abs(a_cy - by) < 8) {
-            ast_m[i].health--;
-            
-            if (ast_m[i].health <= 0) {
-                // DESTROY MEDIUM -> Spawn 2 Smalls
-                ast_m[i].active = false;
-                // start_explosion(ast_m[i].x, ast_m[i].y);
-                player_score += 2;
+        if (a_cx > -8 && a_cx < 8) {
+            if (a_cy > -8 && a_cy < 8) {
+                ast_m[i].health--;
+                
+                if (ast_m[i].health <= 0) {
+                    // DESTROY MEDIUM -> Spawn 2 Smalls
+                    ast_m[i].active = false;
+                    start_explosion(ast_m[i].x, ast_m[i].y);
+                    player_score += 2;
 
-                // Make small ones fast! (+/- 60 subpixels)
-                spawn_child(AST_SMALL, ast_m[i].x, ast_m[i].y, ast_m[i].vx + 128, ast_m[i].vy + 128);
-                spawn_child(AST_SMALL, ast_m[i].x, ast_m[i].y, ast_m[i].vx - 128, ast_m[i].vy - 128);
+                    // Make small ones fast! (+/- 60 subpixels)
+                    spawn_child(AST_SMALL, ast_m[i].x, ast_m[i].y, ast_m[i].vx + 128, ast_m[i].vy + 128);
+                    spawn_child(AST_SMALL, ast_m[i].x, ast_m[i].y, ast_m[i].vx - 128, ast_m[i].vy - 128);
 
-                unsigned ptr = ASTEROID_M_CONFIG + (i * sizeof(vga_mode4_sprite_t));
-                xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                    unsigned ptr = ASTEROID_M_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+                    xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                }
+                return true;
             }
-            return true;
         }
     }
 
@@ -354,22 +364,25 @@ bool check_asteroid_hit(int16_t bx, int16_t by) {
     for (int i = 0; i < MAX_AST_S; i++) {
         if (!ast_s[i].active) continue;
 
-        int16_t a_cx = ast_s[i].x + 4;
-        int16_t a_cy = ast_s[i].y + 4;
+        int16_t a_cx = ast_s[i].x + 4 - bx;
+        int16_t a_cy = ast_s[i].y + 4 - by;
         
-        if (abs(a_cx - bx) < 5 && abs(a_cy - by) < 5) {
-            ast_s[i].health--; // Usually 1 hit kill
-            
-            if (ast_s[i].health <= 0) {
-                // DESTROY SMALL -> Dust
-                ast_s[i].active = false;
-                // start_explosion(ast_s[i].x, ast_s[i].y);
-                player_score += 1;
+        // if (abs(a_cx - bx) < 5 && abs(a_cy - by) < 5) {
+        if (a_cx > -4 && a_cx < 4) {
+            if (a_cy > -4 && a_cy < 4) {
+                ast_s[i].health--; // Usually 1 hit kill
+                
+                if (ast_s[i].health <= 0) {
+                    // DESTROY SMALL -> Dust
+                    ast_s[i].active = false;
+                    start_explosion(ast_s[i].x, ast_s[i].y);
+                    player_score += 1;
 
-                unsigned ptr = ASTEROID_S_CONFIG + (i * sizeof(vga_mode4_sprite_t));
-                xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                    unsigned ptr = ASTEROID_S_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+                    xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                }
+                return true;
             }
-            return true;
         }
     }
 
@@ -396,29 +409,32 @@ bool check_asteroid_hit_fighter(int16_t fx, int16_t fy) {
     for (int i = 0; i < MAX_AST_L; i++) {
         if (!ast_l[i].active) continue;
         
-        int16_t a_cx = ast_l[i].x + 16;
-        int16_t a_cy = ast_l[i].y + 16;
+        int16_t a_cx = ast_l[i].x + 16 - f_cx;
+        int16_t a_cy = ast_l[i].y + 16 - f_cy;
         
-        if (abs(a_cx - f_cx) < 16 && abs(a_cy - f_cy) < 16) {
-            ast_l[i].health -= 1;
-            
-            if (ast_l[i].health <= 0) {
-                // Destroy
-                ast_l[i].active = false;
-                // start_explosion(a_cx - 16, a_cy - 16); // Explosion uses top-left logic?
+        // if (abs(a_cx - f_cx) < 16 && abs(a_cy - f_cy) < 16) {
+        if (a_cx > -16 && a_cx < 16) {
+            if (a_cy > -16 && a_cy < 16) {
+                ast_l[i].health -= 1;
                 
-                // Hide sprite
-                unsigned ptr = ASTEROID_L_CONFIG + (i * sizeof(vga_mode4_asprite_t));
-                xram0_struct_set(ptr, vga_mode4_asprite_t, y_pos_px, -100);
+                if (ast_l[i].health <= 0) {
+                    // Destroy
+                    ast_l[i].active = false;
+                    start_explosion(a_cx - 16, a_cy - 16); // Explosion uses top-left logic?
+                    
+                    // Hide sprite
+                    unsigned ptr = ASTEROID_L_CONFIG + (i * sizeof(vga_mode4_asprite_t));
+                    xram0_struct_set(ptr, vga_mode4_asprite_t, y_pos_px, -100);
 
-                // Spawn Debris from Center
-                int16_t spread = 50;
-                spawn_child(AST_MEDIUM, a_cx, a_cy, ast_l[i].vx + spread, ast_l[i].vy - spread);
-                spawn_child(AST_MEDIUM, a_cx, a_cy, ast_l[i].vx - spread, ast_l[i].vy + spread);
-            } // else {
-            //    start_explosion(fx, fy);
-            // }
-            return true;
+                    // Spawn Debris from Center
+                    int16_t spread = 50;
+                    spawn_child(AST_MEDIUM, a_cx, a_cy, ast_l[i].vx + spread, ast_l[i].vy - spread);
+                    spawn_child(AST_MEDIUM, a_cx, a_cy, ast_l[i].vx - spread, ast_l[i].vy + spread);
+                } // else {
+                //    start_explosion(fx, fy);
+                // }
+                return true;
+            }
         }
     }
 
@@ -430,25 +446,28 @@ bool check_asteroid_hit_fighter(int16_t fx, int16_t fy) {
     for (int i = 0; i < MAX_AST_M; i++) {
         if (!ast_m[i].active) continue;
         
-        int16_t a_cx = ast_m[i].x + 8;
-        int16_t a_cy = ast_m[i].y + 8;
+        int16_t a_cx = ast_m[i].x + 8 - f_cx;
+        int16_t a_cy = ast_m[i].y + 8 - f_cy;
 
-        if (abs(a_cx - f_cx) < 9 && abs(a_cy - f_cy) < 9) {
-            ast_m[i].health -= 1;
-            
-            if (ast_m[i].health <= 0) {
-                ast_m[i].active = false;
-                // start_explosion(ast_m[i].x, ast_m[i].y); // Pass Top-Left if start_explosion expects it
+        // if (abs(a_cx - f_cx) < 9 && abs(a_cy - f_cy) < 9) {
+        if (a_cx > -9 && a_cx < 9) {
+            if (a_cy > -9 && a_cy < 9) {
+                ast_m[i].health -= 1;
+                
+                if (ast_m[i].health <= 0) {
+                    ast_m[i].active = false;
+                    start_explosion(ast_m[i].x, ast_m[i].y); // Pass Top-Left if start_explosion expects it
 
-                unsigned ptr = ASTEROID_M_CONFIG + (i * sizeof(vga_mode4_sprite_t));
-                xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                    unsigned ptr = ASTEROID_M_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+                    xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
 
-                int16_t spread = 80;
-                // Spawn children from Center
-                spawn_child(AST_SMALL, a_cx, a_cy, ast_m[i].vx + spread, ast_m[i].vy - spread);
-                spawn_child(AST_SMALL, a_cx, a_cy, ast_m[i].vx - spread, ast_m[i].vy + spread);
+                    int16_t spread = 80;
+                    // Spawn children from Center
+                    spawn_child(AST_SMALL, a_cx, a_cy, ast_m[i].vx + spread, ast_m[i].vy - spread);
+                    spawn_child(AST_SMALL, a_cx, a_cy, ast_m[i].vx - spread, ast_m[i].vy + spread);
+                }
+                return true;
             }
-            return true;
         }
     }
 
@@ -460,19 +479,128 @@ bool check_asteroid_hit_fighter(int16_t fx, int16_t fy) {
     for (int i = 0; i < MAX_AST_S; i++) {
         if (!ast_s[i].active) continue;
         
-        int16_t a_cx = ast_s[i].x + 4;
-        int16_t a_cy = ast_s[i].y + 4;
+        int16_t a_cx = ast_s[i].x + 4 - f_cx;
+        int16_t a_cy = ast_s[i].y + 4 - f_cy;
 
-        if (abs(a_cx - f_cx) < 5 && abs(a_cy - f_cy) < 5) {
-            ast_s[i].active = false;
-            // start_explosion(ast_s[i].x, ast_s[i].y);
+        // if (abs(a_cx - f_cx) < 5 && abs(a_cy - f_cy) < 5) {
+        if (a_cx > -4 && a_cx < 4) {
+            if (a_cy > -4 && a_cy < 4) {
+                ast_s[i].active = false;
+                start_explosion(ast_s[i].x, ast_s[i].y);
 
-            unsigned ptr = ASTEROID_S_CONFIG + (i * sizeof(vga_mode4_sprite_t));
-            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
-            
-            return true;
+                unsigned ptr = ASTEROID_S_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+                xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                
+                return true;
+            }
         }
     }
     
     return false;
+}
+
+void check_player_asteroid_collision(int16_t px, int16_t py) {
+    // 1. Calculate Player Center (8x8 sprite)
+    int16_t p_cx = px + 4;
+    int16_t p_cy = py + 4;
+
+    // -------------------------------------------------
+    // 1. LARGE ASTEROIDS (Radius ~14)
+    // -------------------------------------------------
+    // Hitbox: 14 (Rock) + 3 (Player) = 17
+    for (int i = 0; i < MAX_AST_L; i++) {
+        if (!ast_l[i].active) continue;
+        
+        // Large uses centered coordinates due to Affine offset
+        int16_t a_cx = ast_l[i].x + 16;
+        int16_t a_cy = ast_l[i].y + 16;
+
+        if (abs(a_cx - p_cx) < 17 && abs(a_cy - p_cy) < 17) {
+            // CRASH INTO LARGE -> INSTANT GAME OVER
+            // enemy_score = 100; 
+            // start_explosion(px, py);
+            // printf("GAME OVER: Player hit Large Asteroid\n");
+            // return; // No need to check others
+
+            // --- NEW DEATH LOGIC ---
+            printf("CRASH! Triggering Death Sequence...\n");
+            
+            // 1. Start the first big explosion exactly at player position
+            start_explosion(px, py);
+            
+            // 2. Begin the 3-second drama
+            trigger_player_death();
+
+            // Use Index 32 (Red in Rainbow Palette) or 0x03 (Standard Red)
+            uint8_t text_color = 32; 
+            
+            // Centering math (approximate)
+            // Screen 320 wide. Text ~60px wide.
+            draw_text(110, 40, "YOU CRASHED...", text_color);
+            draw_text(125, 52, "GAME OVER", text_color);
+            
+            return;
+        }
+    }
+
+    // -------------------------------------------------
+    // 2. MEDIUM ASTEROIDS (Radius ~7)
+    // -------------------------------------------------
+    // Hitbox: 7 (Rock) + 3 (Player) = 10
+    for (int i = 0; i < MAX_AST_M; i++) {
+        if (!ast_m[i].active) continue;
+        
+        int16_t a_cx = ast_m[i].x + 8;
+        int16_t a_cy = ast_m[i].y + 8;
+
+        if (abs(a_cx - p_cx) < 10 && abs(a_cy - p_cy) < 10) {
+            // PENALTY: -20 Points
+            if (player_score >= 20) player_score -= 20; 
+            else player_score = 0;
+
+            // Destroy Rock
+            ast_m[i].active = false;
+            start_explosion(ast_m[i].x, ast_m[i].y);
+            
+            // Hide Sprite
+            unsigned ptr = ASTEROID_M_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+
+            // Split into Smalls
+            int16_t spread = 80;
+            spawn_child(AST_SMALL, a_cx, a_cy, ast_m[i].vx + spread, ast_m[i].vy - spread);
+            spawn_child(AST_SMALL, a_cx, a_cy, ast_m[i].vx - spread, ast_m[i].vy + spread);
+            
+            // Visual feedback
+            start_explosion(px, py);
+            return; // Prevent multi-hit in one frame
+        }
+    }
+
+    // -------------------------------------------------
+    // 3. SMALL ASTEROIDS (Radius ~3)
+    // -------------------------------------------------
+    // Hitbox: 3 (Rock) + 3 (Player) = 6
+    for (int i = 0; i < MAX_AST_S; i++) {
+        if (!ast_s[i].active) continue;
+        
+        int16_t a_cx = ast_s[i].x + 4;
+        int16_t a_cy = ast_s[i].y + 4;
+
+        if (abs(a_cx - p_cx) < 6 && abs(a_cy - p_cy) < 6) {
+            // PENALTY: -10 Points
+            if (player_score >= 10) player_score -= 10;
+            else player_score = 0;
+
+            // Destroy Rock
+            ast_s[i].active = false;
+            start_explosion(ast_s[i].x, ast_s[i].y);
+
+            unsigned ptr = ASTEROID_S_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+            
+            start_explosion(px, py);
+            return;
+        }
+    }
 }

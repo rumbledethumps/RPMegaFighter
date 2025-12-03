@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "sbullets.h"
 #include "asteroids.h"
+#include <stdio.h>
 
 // ============================================================================
 // CONSTANTS
@@ -92,24 +93,19 @@ void update_bullets(void)
         }
 
         // --- NEW: Check Asteroid Collision ---
-        if (check_asteroid_hit(bullets[i].x, bullets[i].y)) {
-            bullets[i].status = -1; // Kill bullet
-            
-            // Hide bullet sprite immediately
-            unsigned ptr = BULLET_CONFIG + (i * sizeof(vga_mode4_sprite_t));
-            xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
-            
-            goto next_bullet; // Move to next bullet
+        if ((i & 1) == (game_frame & 1)) {
+            // printf("Game Frame: %d, Checking asteroid collision for bullet %d at (%d,%d)\n", 
+            //        game_frame, i, bullets[i].x, bullets[i].y);
+            if (check_asteroid_hit(bullets[i].x, bullets[i].y)) {
+                bullets[i].status = -1; // Kill bullet
+                
+                // Hide bullet sprite immediately
+                unsigned ptr = BULLET_CONFIG + (i * sizeof(vga_mode4_sprite_t));
+                xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);
+                
+                goto next_bullet; // Move to next bullet
+            }
         }
-
-        // Check collision with asteroids
-        // if (check_asteroid_hit(bullets[i].x, bullets[i].y)) {
-        //     bullets[i].status = -1; // Destroy bullet
-        //     // Move bullet sprite offscreen
-        //     unsigned ptr = BULLET_CONFIG + i * sizeof(vga_mode4_sprite_t);
-        //     xram0_struct_set(ptr, vga_mode4_sprite_t, x_pos_px, -100);
-        //     continue;
-        // }
         
         // Get velocity components based on bullet direction
         int16_t bvx = -sin_fix[bullets[i].status];

@@ -59,6 +59,7 @@ extern unsigned BULLET_CONFIG;          //Player bullet sprite config
 extern unsigned SBULLET_CONFIG;         //Super bullet sprite config
 extern unsigned POWERUP_CONFIG;         // Powerup sprite config
 extern unsigned BOMBER_CONFIG;          // Bomber Sprite (8x8)
+extern unsigned EXPLOSION_CONFIG;       // Explosion sprite configs
 
 // 0xEC86 - 0xECA6 32      Config  Asteroid M      4 Sprites (Standard)
 // 0xECA6 - 0xECE6 64      Config  Asteroid S      8 Sprites (Standard)
@@ -99,6 +100,10 @@ extern unsigned text_message_addr;
 extern uint16_t game_frame;
 extern int16_t player_score;
 extern int16_t enemy_score;
+
+
+// Explosion management
+#define MAX_EXPLOSIONS 16
 
 // Asteroids
 // Define Counts
