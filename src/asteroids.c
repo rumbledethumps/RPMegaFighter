@@ -87,7 +87,7 @@ static void activate_asteroid(asteroid_t *a, AsteroidType type) {
         a->y = (int16_t)random(0, AWORLD_Y) + AWORLD_Y2;
     } else {
         a->x = (int16_t)random(0, AWORLD_X) + AWORLD_X2;
-        a->y = (rand16() & 1) ? -AWORLD_Y2 : AWORLD_Y2;
+        a->y = (rand16() & 1) ? AWORLD_Y2 : AWORLD_Y2;
     }
 
     // Velocity (Slower for Large, Faster for Small)
@@ -280,7 +280,7 @@ bool check_asteroid_hit(int16_t bx, int16_t by) {
                 // DESTROY LARGE -> Spawn 2 Mediums
                 ast_l[i].active = false;
                 // start_explosion(ast_l[i].x, ast_l[i].y);
-                player_score += 50;
+                player_score += 5;
 
                 // Split velocities (diverge from parent)
                 // Parent velocity +/- 30 subpixels
@@ -306,7 +306,7 @@ bool check_asteroid_hit(int16_t bx, int16_t by) {
                 // DESTROY MEDIUM -> Spawn 2 Smalls
                 ast_m[i].active = false;
                 // start_explosion(ast_m[i].x, ast_m[i].y);
-                player_score += 20;
+                player_score += 2;
 
                 // Make small ones fast! (+/- 60 subpixels)
                 spawn_child(AST_SMALL, ast_m[i].x, ast_m[i].y, ast_m[i].vx + 128, ast_m[i].vy + 128);
@@ -330,7 +330,7 @@ bool check_asteroid_hit(int16_t bx, int16_t by) {
                 // DESTROY SMALL -> Dust
                 ast_s[i].active = false;
                 // start_explosion(ast_s[i].x, ast_s[i].y);
-                player_score += 10;
+                player_score += 1;
 
                 unsigned ptr = ASTEROID_S_CONFIG + (i * sizeof(vga_mode4_sprite_t));
                 xram0_struct_set(ptr, vga_mode4_sprite_t, y_pos_px, -100);

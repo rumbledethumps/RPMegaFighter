@@ -62,6 +62,16 @@ extern const int16_t cos_fix[25];
 // Asteroid collision check
 // extern bool check_asteroid_hit_fighter(int16_t fx, int16_t fy);
 
+// Fighter World Boundaries
+#define FWORLD_PAD 100  // Extra padding beyond screen edges
+#define FWORLD_PAD_D2 50  // Extra padding beyond screen edges
+#define FWORLD_X1 -FWORLD_PAD  // World boundaries
+#define FWORLD_X2 (SCREEN_WIDTH + FWORLD_PAD)  // World boundaries
+#define FWORLD_Y1 -FWORLD_PAD  // World boundaries
+#define FWORLD_Y2 (SCREEN_HEIGHT + FWORLD_PAD)  // World boundaries
+#define FWORLD_X (FWORLD_X2 - FWORLD_X1)  // Total world width
+#define FWORLD_Y (FWORLD_Y2 - FWORLD_Y1)  // Total world height
+
 // Sound system (types defined in sound.h)
 extern void play_sound(uint8_t type, uint16_t frequency, uint8_t waveform, 
                        uint8_t attack, uint8_t decay, uint8_t sustain, uint8_t release);
@@ -115,35 +125,25 @@ void init_fighters(void)
         fighters[i].is_exploding = false; // Not exploding at start
         fighters[i].anim_timer = 0; // Initialize animation timer
         set_fighter_frame(i, 0); // Points back to the first image in the sheet (Normal ship)
-        
-        // fighters[i].x = random(SCREEN_WIDTH_D2, SCREEN_WIDTH) + SCREEN_WIDTH + 144;
-        // fighters[i].y = random(SCREEN_HEIGHT_D2, SCREEN_HEIGHT) + SCREEN_HEIGHT + 104;
-        
-        // if (random(0, 1)) {
-        //     fighters[i].x = -fighters[i].x;
-        // }
-        // if (random(0, 1)) {
-        //     fighters[i].y = -fighters[i].y;
-        // }
 
         uint8_t edge = random(0, 4);  // 0=right, 1=left, 2=top, 3=bottom
                 
         if (edge == 0) {
             // Spawn on right edge
-            fighters[i].x = SCREEN_WIDTH + random(70, 150);
+            fighters[i].x = SCREEN_WIDTH + random(FWORLD_PAD_D2, FWORLD_PAD);
             fighters[i].y = random(20, SCREEN_HEIGHT - 20);
         } else if (edge == 1) {
             // Spawn on left edge
-            fighters[i].x = -random(70, 150);
+            fighters[i].x = -random(FWORLD_PAD_D2, FWORLD_PAD);
             fighters[i].y = random(20, SCREEN_HEIGHT - 20);
         } else if (edge == 2) {
             // Spawn on top edge
             fighters[i].x = random(20, SCREEN_WIDTH - 20);
-            fighters[i].y = SCREEN_HEIGHT + random(70, 150);
+            fighters[i].y = SCREEN_HEIGHT + random(FWORLD_PAD_D2, FWORLD_PAD);
         } else {
             // Spawn on bottom edge
             fighters[i].x = random(20, SCREEN_WIDTH - 20);
-            fighters[i].y = -random(70, 150);
+            fighters[i].y = -random(FWORLD_PAD_D2, FWORLD_PAD);
         }
         
         fighters[i].vx_rem = 0;
@@ -213,20 +213,20 @@ void update_fighters(void)
                 
                 if (edge == 0) {
                     // Spawn on right edge
-                    fighters[i].x = SCREEN_WIDTH + random(20, 100);
+                    fighters[i].x = SCREEN_WIDTH + random(FWORLD_PAD_D2, FWORLD_PAD);
                     fighters[i].y = random(20, SCREEN_HEIGHT - 20);
                 } else if (edge == 1) {
                     // Spawn on left edge
-                    fighters[i].x = -random(20, 100);
+                    fighters[i].x = -random(FWORLD_PAD_D2, FWORLD_PAD);
                     fighters[i].y = random(20, SCREEN_HEIGHT - 20);
                 } else if (edge == 2) {
                     // Spawn on top edge
                     fighters[i].x = random(20, SCREEN_WIDTH - 20);
-                    fighters[i].y = SCREEN_HEIGHT + random(20, 100);
+                    fighters[i].y = SCREEN_HEIGHT + random(FWORLD_PAD_D2, FWORLD_PAD);
                 } else {
                     // Spawn on bottom edge
                     fighters[i].x = random(20, SCREEN_WIDTH - 20);
-                    fighters[i].y = -random(20, 100);
+                    fighters[i].y = -random(FWORLD_PAD_D2, FWORLD_PAD);
                 }
                 
                 fighters[i].status = 1;
@@ -297,17 +297,19 @@ void update_fighters(void)
         fighters[i].x += fvx_applied;
         fighters[i].y += fvy_applied;
 
-        if (fighters[i].x > FIGHTER_WORLD_X2) {
-            fighters[i].x -= FIGHTER_WORLD_X;
-        } else if (fighters[i].x < -FIGHTER_WORLD_X2) {
-            fighters[i].x += FIGHTER_WORLD_X;
-        }
+        // if (fighters[i].x > FIGHTER_WORLD_X2) {
+        //     fighters[i].x -= FIGHTER_WORLD_X;
+        // } else if (fighters[i].x < -FIGHTER_WORLD_X2) {
+        //     fighters[i].x += FIGHTER_WORLD_X;
+        // }
 
-        if (fighters[i].y > FIGHTER_WORLD_Y2) {
-            fighters[i].y -= FIGHTER_WORLD_Y;
-        } else if (fighters[i].y < -FIGHTER_WORLD_Y2) {
-            fighters[i].y += FIGHTER_WORLD_Y;
-        }
+        // if (fighters[i].y > FIGHTER_WORLD_Y2) {
+        //     fighters[i].y -= FIGHTER_WORLD_Y;
+        // } else if (fighters[i].y < -FIGHTER_WORLD_Y2) {
+        //     fighters[i].y += FIGHTER_WORLD_Y;
+        // }
+        if (fighters[i].x < FWORLD_X1) fighters[i].x += FWORLD_X; else if (fighters[i].x > FWORLD_X2) fighters[i].x -= FWORLD_X;
+        if (fighters[i].y < FWORLD_Y1) fighters[i].y += FWORLD_Y; else if (fighters[i].y > FWORLD_Y2) fighters[i].y -= FWORLD_Y;
 
     }
 

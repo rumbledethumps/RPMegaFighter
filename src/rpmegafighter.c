@@ -137,8 +137,8 @@ static void init_graphics(void)
     xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, transform[5],  t2_fix4[SHIP_ROTATION_MAX - initial_rotation + 1]);
     
     // Set sprite position and properties
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, x_pos_px, player_x);
-    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, y_pos_px, player_y);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, x_pos_px, -100); //player_x);
+    xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, y_pos_px, -100); //player_y);
     xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, xram_sprite_ptr, SPACESHIP_DATA);
     xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, log_size, 3);  // 8x8 sprite (2^3)
     xram0_struct_set(SPACECRAFT_CONFIG, vga_mode4_asprite_t, has_opacity_metadata, false);
@@ -272,7 +272,7 @@ static void init_graphics(void)
 
     // Enable sprite modes:
     // Then enable affine sprites (player) - 1 sprite at SPACECRAFT_CONFIG
-    xregn(1, 0, 1, 5, 4, 1, SPACECRAFT_CONFIG, 1 + COUNT_ASTEROID_L, 2);
+    xregn(1, 0, 1, 7, 4, 1, SPACECRAFT_CONFIG, 1 + COUNT_ASTEROID_L, 2, 10, 180);
     // First enable Earth sprite (background layer)
     xregn(1, 0, 1, 5, 4, 0, EARTH_CONFIG, 1, 0);
     // Finally enable regular sprites (fighters + ebullets + bullets + sbullets + power ups + bomber + 2 x asteroids) - all regular sprites in one call
