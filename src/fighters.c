@@ -60,7 +60,7 @@ extern const int16_t sin_fix[25];
 extern const int16_t cos_fix[25];
 
 // Asteroid collision check
-// extern bool check_asteroid_hit_fighter(int16_t fx, int16_t fy);
+extern bool check_asteroid_hit_fighter(int16_t fx, int16_t fy);
 
 // Fighter World Boundaries
 #define FWORLD_PAD 100  // Extra padding beyond screen edges
@@ -255,14 +255,14 @@ void update_fighters(void)
         }
 
         // Inside update_fighters
-        // if (check_asteroid_hit_fighter(fighters[i].x, fighters[i].y)) {
-        //     fighters[i].status = 0;
-        //     active_fighter_count--;
-        //     enemy_score += 2;
-        //     fighters[i].is_exploding = true; // Start explosion sequence
-        //     continue;
-        //     // Do not give player points? Or give points for "Environment Kill"?
-        // }
+        if (check_asteroid_hit_fighter(fighters[i].x, fighters[i].y)) {
+            fighters[i].status = 0;
+            active_fighter_count--;
+            // enemy_score += 2;
+            fighters[i].is_exploding = true; // Start explosion sequence
+            continue;
+            // Do not give player points? Or give points for "Environment Kill"?
+        }
         
         if (game_frame == 0) {
             int16_t fdx = player_world_x - fighters[i].x;

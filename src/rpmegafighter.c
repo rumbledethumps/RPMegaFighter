@@ -505,6 +505,7 @@ void hide_all_sprites(void)
     move_fighters_offscreen();
     move_ebullets_offscreen();
     move_sbullets_offscreen();
+    move_asteroids_offscreen();
 
     // 4. Hide Player Bullets (Manual loop just in case)
     size_t sprite_size = sizeof(vga_mode4_sprite_t);

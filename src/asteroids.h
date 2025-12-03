@@ -35,8 +35,12 @@ extern asteroid_t ast_s[MAX_AST_S];
 void init_asteroids(void);
 void spawn_asteroid_wave(int level); // Call every frame
 void update_asteroids(void);         // Call every frame
+void move_asteroids_offscreen(void); // Move all asteroids offscreen (for screen transitions)
 
 // Returns true if the bullet hit an asteroid (so the bullet should die)
 bool check_asteroid_hit(int16_t x, int16_t y);
+
+// Returns true if the fighter at (fx, fy) crashed into a rock
+bool check_asteroid_hit_fighter(int16_t fx, int16_t fy);
 
 #endif

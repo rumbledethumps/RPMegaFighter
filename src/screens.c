@@ -8,6 +8,7 @@
 #include "powerup.h"
 #include "sbullets.h"
 #include "input.h"
+#include "asteroids.h"
 
 // External references
 extern void draw_text(int16_t x, int16_t y, const char* text, uint8_t color);
@@ -22,6 +23,7 @@ extern void save_high_scores(void);
 extern void start_end_music(void);
 extern void update_music(void);
 extern void stop_music(void);
+extern void move_asteroids_offscreen(void);
 
 extern int16_t game_level;
 extern int16_t game_score;
@@ -134,6 +136,7 @@ void show_game_over(void)
     move_fighters_offscreen();
     move_sbullets_offscreen();
     move_ebullets_offscreen();
+    move_asteroids_offscreen();
     
     // Move all bullets offscreen
     for (uint8_t i = 0; i < MAX_BULLETS; i++) {
