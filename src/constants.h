@@ -124,7 +124,7 @@ extern int16_t enemy_score;
 #define BULLET_COOLDOWN     8
 
 // Enemy bullet properties
-#define MAX_EBULLETS        16       // Enemy bullets
+#define MAX_EBULLETS        10       // Enemy bullets
 #define NEBULLET_TIMER_MAX  8        // Frames between enemy bullet shots
 // #define EFIRE_COOLDOWN_TIMER 16      // Frames a fighter must wait between shots
 
@@ -133,7 +133,7 @@ extern int16_t enemy_score;
 #define EBULLET_COOLDOWN_DECREASE 5  // Decrease per level
 
 // Fighter properties
-#define MAX_FIGHTERS              32  // Maximum number of enemy fighters
+#define MAX_FIGHTERS              30  // Maximum number of enemy fighters
 #define FIGHTER_SPAWN_RATE        128 // Frames between fighter spawns
 #define INITIAL_FIGHTER_SPEED_MIN 16  // Initial minimum fighter speed
 #define INITIAL_FIGHTER_SPEED_MAX 256 // Initial maximum fighter speed
